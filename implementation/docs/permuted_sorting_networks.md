@@ -22,9 +22,9 @@ As in previous djbsort versions, data is sorted first in vector lanes and then t
 
 ### Visualisation
 The power-of-two cases in djbsort are handled by the function `int32_sort_2power`. It applies the following comparators in order from left to right:
-![](/docs/images/djbsort_n=128.png)
+![](./images/djbsort_n=128.png)
 Comparators marked in red place their maximum at their lower index, comparators in blue place their maximum at their upper index. After these comparators have been applied, he permutes and stores the array. When you apply the outer-6-bit-reversal transposition to these comparators (and undo the depth-first ordering), you obtain the following:
- ![](/docs/images/djbsort_n=128_permuted.png)
+ ![](./images/djbsort_n=128_permuted.png)
 which is simply bitonic sort.
 
 ### Why bother

@@ -9,9 +9,9 @@ Where `*x` is a pointer to the array of $2^m$ elements we are sorting, and `w` p
 
 ## Core insight.
 Consider the interlaced bitonic sort `ibitonic(m,w)` where `m` and `w` are as above. The core insight is that `ibitonic(m, w)` *looks and behaves like* `ibitonic(m-w, 0)`. For example, look at the the following plots (made with matplotlib) of the comparisons that occur in `ibitonic(5,1)`:
-![](/docs/images/ibitonic(5,1).png)
+![](./images/ibitonic(5,1).png)
 and in `ibitonic(8, 4)`:
-![](/docs/images/ibitonic(8,4).png)
+![](./images/ibitonic(8,4).png)
 The red comparators place the maximum value in the lower index and the blue comparators place the maximum value in the upper index. 
 
 ## Implementation strategy.
@@ -68,7 +68,7 @@ We apply at most $3$ layers per load/store. Obviously, $3$ does not necessarily 
 The code for merging is contained in `src/sorting/avx/ibitonic/ibitonic_merge.h`.
 
 For example, `merge(8, 3)` looks as follows:
-![](/docs/images/merge(8,3).png)
+![](./images/merge(8,3).png)
 This diagram would correspond to a `merge_two_stages` followed by a `merge_three_stages`.
 
 ##### Depth-first application of comparators
@@ -79,7 +79,7 @@ We can perform atleast three layers of a merge with a single memory store and lo
 A similar approach can be done for two layers.
 
 When we plot the comparators in the order that they are applied (left=first, right=last), our sorting network for `ibitonic(9,4)` takes the following form. The striated merge blocks on the right are due to the depth-first ordering.
-![](/docs/images/ibitonic(9,4)_as_applied.png)
+![](./images/ibitonic(9,4)_as_applied.png)
 Note this diagram exactly corresponds to the first diagram of the recursive construction above. The big blobs on the left are the base cases `ibitonic(8, 4)`. The blue on the right is the `merge(9,4)`. 
 
 
