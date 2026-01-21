@@ -1,0 +1,12 @@
+This tests all the algorithms for two constant time properties using Valgrind:
+
+  (1) We do not branch on secrets.
+  (2) We do not make memory accesses dependent on secrets.
+
+This does not test whether secrets are passed into variable time instructions.
+
+You need to add your include path to Valgrind's memcheck.h in the `test_case.c` file.
+
+There is only one code path, so Valgrind will cover all the code.
+
+You should run ./unit_tests.sh 13 for the classic mceliece parameter set.

@@ -1,0 +1,7 @@
+
+#define CHOOSE_INTERLACED_SORTING
+#define CHOOSE_CBITERAVX
+#define CHOOSE_IPERMSORT
+#define ROUNDS 63
+#define M 13
+#define N 8192

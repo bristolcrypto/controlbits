@@ -1,0 +1,8 @@
+This tests all the algorithms compile and produce the correct control bits for "rounds" many tests on permutations of size 2^m
+
+The file to run is unit_tests.sh
+
+For the Classic McEliece parameter set, `./unit_tests.sh 13 10` will check the control bits are correct for 10 calculations on permutations of size 2^{13} 
+
+The tests for cbiterative_unrolled will fail for m < 4.
+The tests for cbiteravx will fail for m < 6.
