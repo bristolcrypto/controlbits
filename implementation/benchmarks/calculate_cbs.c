@@ -59,10 +59,6 @@ int main() {
   /* Initialise some temporary storage for the algorithms. */
   int32_t *temp = malloc(sizeof(int32_t) * 2 * N);
 
-  /* Bernstein does this, I'm not sure why. */
-  for (i=0; i < ROUNDS+1; i++)
-    recorded_times[i] = ticks();
-
   /* Take measurements. */
   for (round=0; round < ROUNDS+1; round++) {
     recorded_times[round] = ticks();
@@ -77,7 +73,6 @@ int main() {
       exit(1);
     }
   }
-
 
   /* Convert time stamps to time differences. */
   for (i=0; i < ROUNDS; i++)
