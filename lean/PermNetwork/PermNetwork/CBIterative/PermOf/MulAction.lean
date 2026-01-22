@@ -1,6 +1,6 @@
-import PermNetwork.CBConcrete.PermOf.Basic
-import PermNetwork.CBConcrete.Lib.MulAction
-import PermNetwork.CBConcrete.Lib.Vector
+import PermNetwork.CBIterative.PermOf.Basic
+import PermNetwork.CBIterative.Lib.MulAction
+import PermNetwork.CBIterative.Lib.Vector
 
 namespace PermOf
 
@@ -64,7 +64,7 @@ theorem period_eq_one_of_one (a : PermOf 1) {i : ℕ} : MulAction.period a i = 1
   rw [Unique.eq_default a, default_eq, MulAction.period_one]
 
 theorem period_le_card_of_getElem_pow_mem (a : PermOf n) {i : ℕ} (hi : i < n)
-  (s : Finset ℕ) : (∀ k < s.card + 1, (a ^ k)[i] ∈ s) → MulAction.period a i ≤ s.card := by
+  (s : Finset ℕ) : (∀ k ≤ s.card, (a ^ k)[i] ∈ s) → MulAction.period a i ≤ s.card := by
   simp_rw [← smul_of_lt hi]
   exact MulAction.period_le_card_of_smul_pow_mem _ _
 

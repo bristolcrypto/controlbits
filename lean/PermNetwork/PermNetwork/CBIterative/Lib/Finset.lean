@@ -1,4 +1,4 @@
-import PermNetwork.CBConcrete.Lib.Nat
+import PermNetwork.CBIterative.Lib.Nat
 import Mathlib.Data.Fintype.EquivFin
 
 namespace Finset
@@ -44,5 +44,6 @@ theorem card_bitMatchUnder (i : ℕ) (x : Fin (2 ^ n)) :
   (Finset.card_eq_of_equiv_fintype equivBitMatchUnder).trans (Fintype.card_fin (2 ^ (n - i)))
 
 end BitMatchUnder
+
 
 end Finset

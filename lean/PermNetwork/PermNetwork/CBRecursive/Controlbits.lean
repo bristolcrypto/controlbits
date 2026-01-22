@@ -1,6 +1,6 @@
-import PermNetwork.CBAbstract.BitResiduum
-import PermNetwork.CBAbstract.CommutatorCycles
-import PermNetwork.CBAbstract.PermFintwo
+import PermNetwork.CBRecursive.BitResiduum
+import PermNetwork.CBRecursive.CommutatorCycles
+import PermNetwork.CBRecursive.PermFintwo
 import Mathlib.Tactic.FinCases
 import Mathlib.GroupTheory.Perm.Cycle.Factors
 import Mathlib.Data.Fin.Tuple.Sort

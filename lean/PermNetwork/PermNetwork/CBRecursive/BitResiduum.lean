@@ -1,8 +1,8 @@
-import PermNetwork.CBAbstract.Equivs
-import PermNetwork.CBAbstract.Fin
-import PermNetwork.CBAbstract.FunctionEnd
-import PermNetwork.CBAbstract.Nat
-import PermNetwork.CBAbstract.Submonoid
+import PermNetwork.CBRecursive.Equivs
+import PermNetwork.CBRecursive.Fin
+import PermNetwork.CBRecursive.FunctionEnd
+import PermNetwork.CBRecursive.Nat
+import PermNetwork.CBRecursive.Submonoid
 import Mathlib.Algebra.BigOperators.Fin
 import Mathlib.Algebra.Order.BigOperators.Group.Finset
 import Mathlib.Algebra.Order.Star.Basic

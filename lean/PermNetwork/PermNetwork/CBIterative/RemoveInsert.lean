@@ -1,7 +1,5 @@
-import PermNetwork.CBConcrete.Lib.Bool
-import PermNetwork.CBConcrete.Lib.Equiv
-import PermNetwork.CBConcrete.Lib.Finset
-import PermNetwork.CBConcrete.PermOf.MulAction
+import PermNetwork.CBIterative.Lib.Finset
+import PermNetwork.CBIterative.PermOf.MulAction
 
 namespace Nat
 

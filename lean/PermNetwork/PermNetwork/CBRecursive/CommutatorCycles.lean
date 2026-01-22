@@ -1,5 +1,5 @@
-import PermNetwork.CBAbstract.Commutator
-import PermNetwork.CBAbstract.Cycles
+import PermNetwork.CBRecursive.Commutator
+import PermNetwork.CBRecursive.Cycles
 
 set_option autoImplicit false
 

@@ -1,4 +1,4 @@
-import PermNetwork.CBConcrete.Lib.Vector
+import PermNetwork.CBIterative.Lib.Vector
 import Mathlib.Algebra.Group.Action.Basic
 import Mathlib.Algebra.Group.MinimalAxioms
 import Mathlib.Data.Finite.Prod

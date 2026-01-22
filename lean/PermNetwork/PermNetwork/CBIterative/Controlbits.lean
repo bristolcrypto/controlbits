@@ -1,4 +1,4 @@
-import PermNetwork.CBConcrete.Flipbit
+import PermNetwork.CBIterative.Flipbit
 
 namespace PermOf
 

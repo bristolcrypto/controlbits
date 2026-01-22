@@ -5,10 +5,10 @@ namespace MulAction
 variable {G α : Type*} [Group G] [MulAction G α]
 
 theorem period_le_card_of_smul_pow_mem (a : G) {i : α}
-  (s : Finset α) (hia : ∀ k < s.card + 1, (a ^ k) • i ∈ s) : MulAction.period a i ≤ s.card := by
+  (s : Finset α) (hia : ∀ k ≤ s.card, (a ^ k) • i ∈ s) : MulAction.period a i ≤ s.card := by
   rcases Finset.exists_ne_map_eq_of_card_lt_of_maps_to
     (f := (fun (k : Fin (s.card + 1)) => (a ^ k.1) • i))
-    ((Nat.lt_succ_self _).trans_eq (Finset.card_fin _).symm) (fun _ _ => hia _ (Fin.is_lt _))
+    ((Nat.lt_succ_self _).trans_eq (Finset.card_fin _).symm) (fun _ _ => hia _ (Fin.is_le _))
     with ⟨x, _, y, _, hxy, ha⟩
   wlog hxy' : x < y with H
   · exact H _ _ hia _ (Finset.mem_univ _) _ (Finset.mem_univ _)

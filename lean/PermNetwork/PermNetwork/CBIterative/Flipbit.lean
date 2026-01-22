@@ -1,5 +1,5 @@
-import PermNetwork.CBConcrete.PermOf.BitInvariant
-import PermNetwork.CBConcrete.RemoveInsert
+import PermNetwork.CBIterative.PermOf.BitInvariant
+import PermNetwork.CBIterative.RemoveInsert
 
 namespace Nat
 
@@ -304,13 +304,6 @@ def flipBitPerm (i : ℕ) : Equiv.Perm ℕ :=
 
 @[simp]
 theorem flipBitPerm_inv_apply : ∀ (x i : ℕ), (flipBitPerm i)⁻¹ x = x.flipBit i := fun _ _ => rfl
-
-theorem flipBitPerm_eq_permCongr (i : ℕ) :
-    flipBitPerm i = (insertBitEquiv i).permCongr (boolInversion.prodCongr (Equiv.refl _)) := by
-  simp_rw [Equiv.ext_iff, flipBitPerm_apply,
-    flipBit_apply, Equiv.permCongr_apply, insertBitEquiv_apply,
-    Equiv.prodCongr_apply, Prod.map_fst, Prod.map_snd, Equiv.refl_apply, boolInversion_apply,
-    insertBitEquiv_symm_apply, implies_true]
 
 end FlipBit
 

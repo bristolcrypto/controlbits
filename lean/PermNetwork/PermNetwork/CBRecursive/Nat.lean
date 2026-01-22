@@ -1,5 +1,5 @@
 import Mathlib.Data.Nat.SuccPred
-import PermNetwork.CBAbstract.Order
+import PermNetwork.CBRecursive.Order
 
 namespace Nat
 

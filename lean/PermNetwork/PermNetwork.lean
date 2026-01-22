@@ -1,3 +1,3 @@
-import PermNetwork.CBConcrete.Controlbits
-import PermNetwork.CBAbstract.Controlbits
+import PermNetwork.CBIterative.Controlbits
+import PermNetwork.CBRecursive.Controlbits
 import PermNetwork.ComparatorNetwork.Basic

@@ -1,7 +1,7 @@
 import Batteries.Data.Vector.Lemmas
-import PermNetwork.CBConcrete.Lib.Array
-import PermNetwork.CBConcrete.Lib.Nat
-import PermNetwork.CBConcrete.Lib.Fin
+import PermNetwork.CBIterative.Lib.Array
+import PermNetwork.CBIterative.Lib.Nat
+import PermNetwork.CBIterative.Lib.Fin
 import Mathlib.Algebra.Order.Star.Basic
 
 namespace Vector
