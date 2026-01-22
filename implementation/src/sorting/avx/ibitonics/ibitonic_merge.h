@@ -334,9 +334,7 @@ static void ibitonic_merge_backwards_w_leq_2(int32_t *x, int32_t m, int32_t w) {
         merge_two_stages_backwards(x, m, 0, j);
         j -= 2;
     }
-
-    /* Now j is a multiple of 3. We descend untill we hit j==4. Then,
-       use Bernstein's sort  */
+    /* j is now multiple of 3. */
     while ( j > 6 ) {
         merge_three_stages_backwards(x, m, 0, j);
         j -= 3;

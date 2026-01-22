@@ -1,14 +1,13 @@
 #ifndef ITERATIVE_SCALAR
 #define ITERATIVE_SCALAR
 
-
-
 #include "../utilities/portable_macros.h"
 #include "../cryptoint/crypto_int32.h"
 #include "../sorting/sort.h"
 #define int32_min crypto_int32_min
 
-/* This is a non-recursive implementation of Dan Bernstein's control bits algorithm.
+/* This is a non-recursive implementation of the Nassimi-Sahni algorithm for calculating 
+   the control bits for a Bene\v{s} network.
 
 Parameters:
   *out: 0-initialised space for (2m-1)n/2 control bits
