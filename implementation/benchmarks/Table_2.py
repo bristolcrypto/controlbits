@@ -1,5 +1,9 @@
 """ This script collects the data for table 2 where all algorithms
-    are compiled with -O2 -mavx2 flags."""
+    are compiled with -O2 -mavx2 flags. Please set the following variable
+    to match your architecture."""
+
+
+microarch = "meteorlake"
 
 
 from os import getcwd
@@ -23,8 +27,8 @@ if any([not helpers.check_no_turbo(), not helpers.check_underclocking_disabled(c
     quit()
 
 # Compiler options copied from libmceliece x86 and set to -mtune=meteorlake
-compilers = ["gcc -Wall -fPIC -fwrapv -O2 -mmmx -msse -msse2 -msse3 -mssse3 -msse4.1 -msse4.2 -mavx -mbmi -mbmi2 -mpopcnt -mavx2 -mtune=meteorlake".split(),
-             "clang -Wall -fPIC -fwrapv -Qunused-arguments -O2 -mmmx -msse -msse2 -msse3 -mssse3 -msse4.1 -msse4.2 -mavx -mbmi -mbmi2 -mpopcnt -mavx2 -mtune=meteorlake".split()]
+compilers = [f"gcc -Wall -fPIC -fwrapv -O2 -mmmx -msse -msse2 -msse3 -mssse3 -msse4.1 -msse4.2 -mavx -mbmi -mbmi2 -mpopcnt -mavx2 -mtune={microarch}".split(),
+             f"clang -Wall -fPIC -fwrapv -Qunused-arguments -O2 -mmmx -msse -msse2 -msse3 -mssse3 -msse4.1 -msse4.2 -mavx -mbmi -mbmi2 -mpopcnt -mavx2 -mtune={microarch}".split()]
 
 tests_parameters = [("cbrecursion", "ibitonic" , "standard_sorting"  ),  # -+-
                     ("cbiterative", "ibitonic" , "standard_sorting"  ),  #  |   row 1
