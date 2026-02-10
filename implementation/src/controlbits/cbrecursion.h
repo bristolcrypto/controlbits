@@ -11,9 +11,10 @@
 typedef int16_t int16;
 typedef int32_t int32;
 #include "../cryptoint/crypto_int32.h"
-#define int32_min crypto_int32_min
 #include "../cryptoint/crypto_int16.h"
 #include "../cryptoint/crypto_int8.h"
+
+#define int32_min crypto_int32_min
 #define crypto_sort_int32 int32_sort
 #include "../sorting/sort.h"
 

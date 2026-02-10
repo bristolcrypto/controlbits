@@ -14,13 +14,14 @@ The file `sorting/sort.h` defines the APIs used for sorting by the control bit a
 
 The recursive algorithms call the `void int32_sort(int32_t *x, long long n)` function.
 
- The iterative algorithms call the `void int32_sort_interlaced(int32_t *x, int32_t m, int32_t w)` function. See `docs/interlaced_sorting_networks.md`. 
+The iterative algorithms call the `void int32_sort_interlaced(int32_t *x, int32_t m, int32_t w)` function. See `docs/interlaced_sorting_networks.md`. 
 
 The implementations in `src/sorting/` are
 1. `portable/portable4.h` - copied from djbsort version `20190516` [2]
 2. `avx/ibitonic.h` - interlaced bitonic sorts - see `docs/interlaced_sorting_networks.md`. 
-3. `avx/permsorts/djbsort.h` - copied from djbsort version `20190516` [2]
-4. `avx/ipermsorts.h` - permuted and interlaced bitonic sorts - see `docs/permuted_sorting_networks.md`
+3. `avx/permsorts/djbsort20190516.h` - copied from djbsort version `20190516` [2]
+4. `avx/permsorts/djbsort20260127.h` - copied from djbsort version `20260127` [2]
+5. `avx/ipermsort.h` - permuted and interlaced bitonic sorts - see `docs/permuted_sorting_networks.md`
 
 
 ## Benchmarks
@@ -38,17 +39,19 @@ There is a range of combinations of controlbit algorithm, sorting algorithm, and
 
 For `demo.c`, you choose the options by definining the self-explanatory macros:
 1. `CHOOSE_CBRECURSION` with
-  a. `CHOOSE_PORTABLE4` and `CHOOSE_STANDARD_SORTING`,
-  b. `CHOOSE_DJBSORT`   and `CHOOSE_STANDARD_SORTING`,
-  c. `CHOOSE_IBITONIC`  and `CHOOSE_STANDARD_SORTING` (This gives you AVX2-enabled Bitonic sort).
+    1. `CHOOSE_PORTABLE4`   and `CHOOSE_STANDARD_SORTING`,
+    2. `CHOOSE_DJBSORT2019` and `CHOOSE_STANDARD_SORTING`,
+    3. `CHOOSE_DJBSORT2026` and `CHOOSE_STANDARD_SORTING`,
+    3. `CHOOSE_IBITONIC`    and `CHOOSE_STANDARD_SORTING` (This gives you AVX2-enabled Bitonic sort).
 2. Any of `CHOOSE_CBITERATIVE`, `CHOOSE_CBITERATIVE_UNROLLED`, `CHOOSE_CBITERAVX` with
-  a. `CHOOSE_PORTABLE4` and (`CHOOSE_STANDARD_SORTING` or `CHOOSE_INTERLACED_SORTING`),
-  b. `CHOOSE_DJBSORT`   and `CHOOSE_STANDARD_SORTING`,
-  c. `CHOOSE_IBITONIC`  and (`CHOOSE_STANDARD_SORTING` or `CHOOSE_INTERLACED_SORTING`),
-  d. `CHOOSE_IPERMSORT` and `CHOOSE_INTERLACED_SORTING`
+    1. `CHOOSE_PORTABLE4`   and (`CHOOSE_STANDARD_SORTING` or `CHOOSE_INTERLACED_SORTING`),
+    2. `CHOOSE_DJBSORT2019` and `CHOOSE_STANDARD_SORTING`,
+    3. `CHOOSE_DJBSORT2026` and `CHOOSE_STANDARD_SORTING`,
+    4. `CHOOSE_IBITONIC`    and (`CHOOSE_STANDARD_SORTING` or `CHOOSE_INTERLACED_SORTING`),
+    5. `CHOOSE_IPERMSORT`   and `CHOOSE_INTERLACED_SORTING`
 
 
-The testing and benchmarking scripts create `director.h` files to choose these macros.
+The testing and benchmarking scripts create `director.h` files to choose these macros. Note that the implementation of `ipermsort` uses `djbsort` version 20260127 for w=0 case.
 
 ## Refs
 [1] https://lib.mceliece.org/

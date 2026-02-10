@@ -4,7 +4,7 @@
 #include "ibitonics/ibitonic_merge.h"
 
 #if defined(CHOOSE_STANDARD_SORTING)
-  #include "permsorts/djbsort.h"
+  #include "permsorts/djbsort20260127.h"
 #endif
 
 

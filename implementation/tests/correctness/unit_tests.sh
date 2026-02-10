@@ -1,7 +1,7 @@
 #!/bin/bash
 
 interlaced_algs_to_test=(CBITERATIVE CBITERATIVE_UNROLLED CBITERAVX)
-normal_sorts=(DJBSORT PORTABLE4)
+normal_sorts=(DJBSORT2019 DJBSORT2026 PORTABLE4)
 interlaced_sorts=(IPERMSORT IBITONIC PORTABLE4)
 
 # We take in arguments for M and rounds

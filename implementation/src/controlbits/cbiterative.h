@@ -3,8 +3,8 @@
 
 #include "../utilities/portable_macros.h"
 #include "../cryptoint/crypto_int32.h"
-#include "../sorting/sort.h"
 #define int32_min crypto_int32_min
+#include "../sorting/sort.h"
 
 /* This is a non-recursive implementation of the Nassimi-Sahni algorithm for calculating 
    the control bits for a Bene\v{s} network.

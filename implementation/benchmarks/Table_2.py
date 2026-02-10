@@ -30,18 +30,18 @@ if any([not helpers.check_no_turbo(), not helpers.check_underclocking_disabled(c
 compilers = [f"gcc -Wall -fPIC -fwrapv -O2 -mmmx -msse -msse2 -msse3 -mssse3 -msse4.1 -msse4.2 -mavx -mbmi -mbmi2 -mpopcnt -mavx2 -mtune={microarch}".split(),
              f"clang -Wall -fPIC -fwrapv -Qunused-arguments -O2 -mmmx -msse -msse2 -msse3 -mssse3 -msse4.1 -msse4.2 -mavx -mbmi -mbmi2 -mpopcnt -mavx2 -mtune={microarch}".split()]
 
-tests_parameters = [("cbrecursion", "ibitonic" , "standard_sorting"  ),  # -+-
-                    ("cbiterative", "ibitonic" , "standard_sorting"  ),  #  |   row 1
-                    ("cbiteravx"  , "ibitonic" , "standard_sorting"  ),  # -+-
-                    ("cbrecursion", "djbsort"  , "standard_sorting"  ),  # -+-
-                    ("cbiterative", "djbsort"  , "standard_sorting"  ),  #  |   row 2
-                    ("cbiteravx"  , "djbsort"  , "standard_sorting"  ),  # -+-
-                                                                         # -+-
-                    ("cbiterative", "ibitonic" , "interlaced_sorting"),  #  |   row 3
-                    ("cbiteravx"  , "ibitonic" , "interlaced_sorting"),  # -+-  
-                                                                         # -+- 
-                    ("cbiterative", "ipermsort"   , "interlaced_sorting"),  #  |   row 4    
-                    ("cbiteravx"  , "ipermsort"   , "interlaced_sorting")]  # -+-    
+tests_parameters = [("cbrecursion", "ibitonic"   , "standard_sorting"  ),  # -+-
+                    ("cbiterative", "ibitonic"   , "standard_sorting"  ),  #  |   row 1
+                    ("cbiteravx"  , "ibitonic"   , "standard_sorting"  ),  # -+-
+                    ("cbrecursion", "djbsort2026", "standard_sorting"  ),  # -+-
+                    ("cbiterative", "djbsort2026", "standard_sorting"  ),  #  |   row 2
+                    ("cbiteravx"  , "djbsort2026", "standard_sorting"  ),  # -+-
+                                                                           # -+-
+                    ("cbiterative", "ibitonic"   , "interlaced_sorting"),  #  |   row 3
+                    ("cbiteravx"  , "ibitonic"   , "interlaced_sorting"),  # -+-  
+                                                                           # -+- 
+                    ("cbiterative", "ipermsort"  , "interlaced_sorting"),  #  |   row 4    
+                    ("cbiteravx"  , "ipermsort"  , "interlaced_sorting")]  # -+-    
 
 helpers.set_up_cryptoint_optblockers(cwd)
 

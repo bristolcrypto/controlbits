@@ -1,8 +1,8 @@
 #include "src/utilities/utilities.h"
 
 
-#define CHOOSE_CBITERATIVE_UNROLLED
-#define CHOOSE_IPERMSORT
+#define CHOOSE_CBITERATIVE
+#define CHOOSE_PORTABLE4
 #define CHOOSE_INTERLACED_SORTING
 
 

@@ -13,3 +13,6 @@ For obtain reproducible results, you should
 Running `python3 Table_1.py` or `python3 Table_2.py` will guide you through these steps (and shout warnings until they are completed.)
 
 For better optimisations, please set the `microarch` variable in `Table_2.py`. It is set to use `--mtune=meteorlake` as the experiments in the paper were performed on this microarchitecture.
+
+## Updates
+10th Feb 2026: `djbsort` in the benchmark script now refers to `djbsort` version 20260127.

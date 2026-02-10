@@ -1,13 +1,17 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include "../cryptoint/crypto_int32.h"
+#define int32_MINMAX(a,b) crypto_int32_minmax(&(a),&(b))
 
 #if defined(CHOOSE_PORTABLE4)
   #include "portable/portable4.h"
 #elif defined(CHOOSE_BITONIC)
   #include "portable/bitonic.h"
-#elif defined(CHOOSE_DJBSORT)
-  #include "avx/permsorts/djbsort.h"
+#elif defined(CHOOSE_DJBSORT2019)
+  #include "avx/permsorts/djbsort20190516.h"
+#elif defined(CHOOSE_DJBSORT2026)
+  #include "avx/permsorts/djbsort20260127.h"
 #elif defined(CHOOSE_IPERMSORT)
   #include "avx/ipermsort.h"
 #elif defined(CHOOSE_IBITONIC)
@@ -31,7 +35,9 @@
         exit(1);
       #endif
     #elif defined(CHOOSE_STANDARD_SORTING)
-      #if defined(CHOOSE_DJBSORT)
+      #if defined(CHOOSE_DJBSORT2019)
+        djbsort(x, 1 << m);
+      #elif defined(CHOOSE_DJBSORT2026)
         djbsort(x, 1 << m);
       #elif defined(CHOOSE_PORTABLE4)
         portable4(x, 1 << m);
@@ -49,7 +55,9 @@
 
 #elif defined(CHOOSE_CBRECURSION)
   static void int32_sort(int32_t *x, long long n) {
-    #if defined(CHOOSE_DJBSORT)
+    #if defined(CHOOSE_DJBSORT2019)
+      djbsort(x, n);
+    #elif defined(CHOOSE_DJBSORT2026)
       djbsort(x, n);
     #elif defined(CHOOSE_BITONIC)
       bitonic(x, n);

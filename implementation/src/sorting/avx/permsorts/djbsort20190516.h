@@ -6,6 +6,7 @@
 //#include "int32_sort.h"
 #include <stdint.h>
 #include <immintrin.h>
+#include "../../../cryptoint/crypto_int32.h"
 
 #define int32 int32_t
 

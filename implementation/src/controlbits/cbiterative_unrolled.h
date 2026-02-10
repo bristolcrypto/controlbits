@@ -3,8 +3,9 @@
 
 #include "../utilities/portable_macros.h"
 #include "../cryptoint/crypto_int32.h"
-#include "../sorting/sort.h"
 #define int32_min crypto_int32_min
+#define int32_MINMAX(a,b) crypto_int32_minmax(&(a),&(b))
+#include "../sorting/sort.h"
 
 /* This inline function takes over the control bits logic temporarily provided that: 
   

@@ -1,7 +1,7 @@
 #ifndef IPERMSORT
 #define IPERMSORT
 #include "../../utilities/avx_macros.h"
-#include "permsorts/djbsort.h"
+#include "permsorts/djbsort20260127.h"
 #include "permsorts/iperm_w1.h"
 #include "permsorts/iperm_w2.h"
 #include "ibitonic.h"
