@@ -4,7 +4,7 @@
 
 
 /* You need to include your path to valgrind's memcheck here. */
-#include "/snap/valgrind/177/usr/include/valgrind/memcheck.h"
+#include <valgrind/memcheck.h>
 
 #if defined(CHOOSE_CBRECURSION)
   #include "../../src/controlbits/cbrecursion.h"

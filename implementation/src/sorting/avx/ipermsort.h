@@ -4,6 +4,7 @@
 #include "permsorts/djbsort20260127.h"
 #include "permsorts/iperm_w1.h"
 #include "permsorts/iperm_w2.h"
+#include "permsorts/iperm_wgeq3.h"
 #include "ibitonic.h"
 
 
