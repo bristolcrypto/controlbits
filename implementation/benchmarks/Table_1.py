@@ -17,6 +17,7 @@ if cwd[-len(checkfor):] != checkfor:
   print("Error. You must run this script from the benchmarks directory.")
   quit()
 
+helpers.find_libcpucycles_impl()
 if any([not helpers.check_no_turbo(), not helpers.check_underclocking_disabled(core), not helpers.check_core_isnt_simultaneous_multithreading(core)]):
   carry_on = input("Continue? y/n \n")
   if 'y' not in carry_on.lower():

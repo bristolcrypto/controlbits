@@ -2,6 +2,7 @@
 #include "director.h"
 #include "../src/utilities/utilities.h"
 #include <stdlib.h>
+#include <cpucycles.h>
 
 #if defined(CHOOSE_CBRECURSION)
   #include "../src/controlbits/cbrecursion.h"
@@ -28,16 +29,6 @@ void controlbits(unsigned char *out, int16_t *pi, int32_t m, int32_t n, int32_t 
   #endif
 }
 
-
-/* Reads the x86 Time Stamp Counter. */
-long long ticks(void)
-{
-  unsigned long long result;
-  asm volatile(".byte 15; .byte 49; shlq $32, %%rdx;orq %%rdx,%%rax"
-                : "=a"(result) :: "%rdx");
-  return result;
-}
-
 int16_t perms[(ROUNDS+1) * N]                                   __attribute__((aligned(4096)));
 int16_t correctness_check[(ROUNDS+1) * N]                       __attribute__((aligned(4096)));
 unsigned char cb_outputs[(((2*M-1)*(N/2))+7)/8 * (ROUNDS+1)]    __attribute__((aligned(4096)));
@@ -61,7 +52,7 @@ int main() {
 
   /* Take measurements. */
   for (round=0; round < ROUNDS+1; round++) {
-    recorded_times[round] = ticks();
+    recorded_times[round] = cpucycles();
     controlbits( &cb_outputs[(((2*M-1)*(N/2))+7)/8 * round], &perms[N*round], M, N, temp);
   }
 

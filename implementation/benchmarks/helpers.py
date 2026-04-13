@@ -45,7 +45,7 @@ def compile_and_run(core, compiler_cmd: list[str], test_to_run: str, cb_alg: str
                     ["compiler_cbalg_sortalg", [ timing data ]]
   """
   name = f"{compiler_cmd[0]}_{cb_alg}_{sort_alg}"
-  compiler_cmd += ["int8_optblocker.o", "int16_optblocker.o", "int32_optblocker.o", test_to_run, "-o", name]
+  compiler_cmd += ["int8_optblocker.o", "int16_optblocker.o", "int32_optblocker.o", test_to_run, "-o", name, "-lcpucycles"]
   # Set the director.h file.
   writefile("./director.h", f"""
 #define CHOOSE_{sort_type.upper()}
@@ -80,8 +80,7 @@ def compile_and_run(core, compiler_cmd: list[str], test_to_run: str, cb_alg: str
 
 
 
-def try_get_core_without_simultaneous_multithreading():
-  
+def try_get_core_without_simultaneous_multithreading():  
   cpuinfo = readfile("/proc/cpuinfo")
   # Get all the cores.
   cores = []
@@ -153,3 +152,17 @@ def clean_up_cryptoint_optblockers(working_directory):
   remove(f"./int8_optblocker.o")
   remove(f"./int16_optblocker.o")
   remove(f"./int32_optblocker.o")
+
+def find_libcpucycles_impl():
+  cpucyclesinfo = subprocess.Popen("cpucycles-info", stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+  out, err = cpucyclesinfo.communicate()
+  
+  if err is not None:
+    print("ERROR: script could not run 'cpucycles-info', perhaps libcpucycles is not installed or not on your PATH.")
+    return
+  
+  for line in out.decode().splitlines():
+    if 'cpucycles implementation ' in line:
+      impl = line.split(" ")[2]
+
+  print(f"Benchmarks will be run using the {impl} libcpucycles counter.")
