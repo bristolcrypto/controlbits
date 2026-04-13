@@ -6,6 +6,9 @@ import Mathlib.GroupTheory.Perm.Cycle.Factors
 import Mathlib.Data.Fin.Tuple.Sort
 open Fin Equiv
 
+open scoped commutatorElement
+
+
 abbrev ControlBitsLayer (m : ℕ) := BV m → Bool
 
 variable {m : ℕ} {π : Perm (BV (m + 1))} {q : BV (m + 1)} {p : BV m}
@@ -119,8 +122,7 @@ lemma lastLayer_apply {p : BV m} : LastLayer π p =
 
 lemma lastLayer_base {π : Perm (BV 1)} : LastLayer (m := 0) π = fun _ => decide (π 0 = 1) := by
   ext
-  simp_rw [LastLayer, firstLayerPerm_base, mergeBitRes_base_false,
-    getBit_base, Perm.one_apply]
+  simp only [LastLayer, firstLayerPerm_base, mergeBitRes_base_false, Perm.one_apply, getBit_base]
 
 def LastLayerPerm (π : Perm (BV (m + 1))) := condFlipBit 0 (LastLayer π)
 
@@ -223,16 +225,17 @@ lemma toPermPartial_succ_castSucc {n : Fin (m + 1)} {cb} :
   · simp_rw [castSucc_zero, toPermPartial_zero,
     bitInvarMulEquiv_zero_apply_condFlipBits, succ_last]
   · simp_rw [← succ_castSucc, toPermPartial_succ,  IH, ← Pi.mul_def,
-    map_mul, Subgroup.coe_mul, bitInvarMulEquiv_zero_apply_condFlipBits,
-    rev_castSucc, succ_castSucc, val_castSucc]
+    map_mul, Subgroup.coe_mul, bitInvarMulEquiv_zero_apply_condFlipBits]
+    grind
 
 lemma toPermPartial_succ_last {cb : PartialControlBits (m + 1) (m + 1)} :
     toPermPartial (last _) cb =
   condFlipBit 0 (cb 0) * ((bitInvarMulEquiv 0) fun b =>
     toPermPartial (last _) fun i k => cb i.castSucc.succ (mergeBitRes 0 b k)) *
     condFlipBit 0 (cb (last _)) := by
-  simp_rw [← succ_last, toPermPartial_succ, rev_last, toPermPartial_succ_castSucc, castSucc_zero,
-  succ_last, val_last]
+  simp_rw [← succ_last, toPermPartial_succ, rev_last, toPermPartial_succ_castSucc,
+    castSucc_zero, succ_last, val_last]
+  grind
 
 lemma bitInvar_zero_toPermPartial_castSucc {n : Fin m} {cb} :
     bitInvar 0 ⇑(toPermPartial n.castSucc cb) := by

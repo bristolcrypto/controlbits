@@ -1,20 +1,32 @@
 import Mathlib.Algebra.BigOperators.Fin
 import Mathlib.Data.Fin.Tuple.Sort
 
+instance [IsEmpty α] (p : α → Prop) : DecidablePred p := (.isFalse <| fun _ => isEmptyElim ·)
+
+namespace Fin
+
+open Finset in
+@[simp] theorem card_filter_univ_zero (p : Fin 0 → Prop) : #{x | p x} = 0 :=
+  Finset.eq_empty_of_isEmpty {x | p x} ▸ Finset.card_empty
+
+end Fin
+
 namespace List
 
 open Finset in
 theorem countP_finRange {p : Fin n → Bool} : countP p (finRange n) = #{i : Fin n | p i} := by
-  induction n with
-  | zero => rfl
-  | succ n IH =>
-    simp_rw [finRange_succ, countP_cons, countP_map, IH, Function.comp_apply, Finset.card_filter,
-      Fin.sum_univ_succ, add_comm]
+  induction n <;> grind [Fin.card_filter_univ_zero, Fin.card_filter_univ_succ,
+    countP_map, finRange_succ]
+
+open Finset in
+theorem countP_ofFn {f : Fin n → α} [BEq α] (p : α → Bool) :
+    (ofFn f).countP p = #{i : Fin n | p (f i)} := by
+  induction n <;> grind [Fin.card_filter_univ_zero, Fin.card_filter_univ_succ, ofFn_succ]
 
 open Finset in
 theorem count_ofFn {f : Fin n → α} {a : α} [BEq α] :
     (ofFn f).count a = #{i : Fin n | f i == a} := by
-  rw [List.ofFn_eq_map, count, countP_map, Function.comp_def, countP_finRange]
+  rw [List.count_eq_countP, countP_ofFn]
 
 theorem ofFn_comp_perm_ofFn_iff {f : Fin n → α} {π : Equiv.Perm (Fin n)} :
     ofFn (f ∘ π) ~ ofFn f := by classical

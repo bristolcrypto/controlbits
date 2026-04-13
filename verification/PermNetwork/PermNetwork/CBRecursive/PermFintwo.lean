@@ -3,6 +3,8 @@ import Mathlib.Algebra.CharZero.Defs
 
 namespace Fin
 
+open scoped commutatorElement
+
 lemma perm_fin_two (π : Equiv.Perm (Fin 2)) :
 π = (if (π 0 = 1) then Equiv.swap 0 1 else 1) := by
   rw [Equiv.ext_iff, forall_fin_two]

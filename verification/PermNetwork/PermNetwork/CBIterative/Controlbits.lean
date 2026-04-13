@@ -217,7 +217,8 @@ theorem testBit_rightPerm {i : ℕ}
         (period_le_two_pow_sub_of_bitInvariant_lt ha), getElem_flipBitVals_of_div hin,
         a.flipBit_getElem_cycleMinVector_flipBitCommutator_comm ha a.getElem_lt
         (Nat.lt_succ_of_le hi)]
-    · grind
+    · simp_rw [hkb ▸ insertBit_testBit_removeBit_of_eq, hkb, Bool.not_false, Bool.if_true_left,
+        Bool.decide_eq_true, Bool.or_false]
   · simp_rw [getElem_leftPerm_of_gt hi, getElem_rightPerm_of_gt hi,
       (bitInvariant_of_ge (Nat.pow_le_pow_of_le one_lt_two hi)).testBit_getElem_eq_testBit]
 

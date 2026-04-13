@@ -144,9 +144,10 @@ lemma mergeBitRes_zero_modNat : (mergeBitRes 0 b p).modNat = bif b then 1 else 0
 (Prod.ext_iff.mp (mergeBitRes_zero_divNat_modNat (b := b) (p := p))).2
 
 lemma mergeBitRes_zero_apply_true_zero_eq_one : mergeBitRes (0 : Fin (m + 1)) true 0 = 1 := by
-  simp_rw [mergeBitRes_zero, Fin.ext_iff, finProdFinEquiv_apply_val, Fin.val_zero, mul_zero,
-  add_zero, Bool.cond_true, Fin.val_one, Fin.val_one', ← Nat.pow_succ,
-  Nat.mod_eq_of_lt (Nat.one_lt_pow' _ _ )]
+  simp_rw [mergeBitRes_zero]
+  apply Fin.ext
+  simp_rw [finProdFinEquiv_apply_val, Fin.val_zero, mul_zero,
+  add_zero, Bool.cond_true, Fin.val_one, Fin.val_one', Nat.one_mod_two_pow (Nat.succ_pos _)]
 
 lemma mergeBitRes_base_true {i : Fin 1} {p : BV 0} : mergeBitRes (m := 0) i true p = 1 := by
 rw [Fin.eq_zero p, Fin.eq_zero i] ; exact mergeBitRes_zero_apply_true_zero_eq_one
@@ -924,8 +925,7 @@ lemma condFlipBit_succAbove_apply {j : Fin (m + 2)} {i : Fin (m + 1)} {c : BV (m
 lemma condflipBit_zero : condFlipBit 0 c q =
   bif c (q.divNat) then
   finProdFinEquiv (q.divNat, q.modNat.rev)
-  else q := by
-  rw [condFlipBit_apply, flipBit_zero, getRes_zero]
+  else q := by grind [condFlipBit_apply, flipBit_zero, getRes_zero]
 
 lemma condFlipBit_zero_mergeBitRes :
 condFlipBit 0 c (mergeBitRes 0 b p) = finProdFinEquiv (p, bif xor (c p) b then 1 else 0) := by

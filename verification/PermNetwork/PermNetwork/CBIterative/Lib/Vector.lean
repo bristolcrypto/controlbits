@@ -104,25 +104,26 @@ theorem bswapIfInBounds_false {xs : Vector α n} {i j : Nat} :
 
 theorem back_push {v : Vector α n} {a : α} : (v.push a).back = a := by grind
 
-@[elab_as_elim, induction_eliminator, grind =]
+@[elab_as_elim, induction_eliminator]
 def induction {C : ∀ {n : ℕ}, Vector α n → Sort*} (empty : C #v[])
     (push : ∀ (n : ℕ) (xs : Vector α n) (x : α), C xs → C (xs.push x)) :
     {n : ℕ} → (xs : Vector α n) → C xs
   | 0, xs => xs.eq_empty ▸ empty
   | _ + 1, xs => xs.push_pop_back ▸ push _ _ _ (induction empty push _)
 
-@[simp]
+@[simp, grind =]
 theorem induction_empty {C : ∀ {n : ℕ}, Vector α n → Sort*} (empty : C #v[])
     (push : ∀ (n : ℕ) (xs : Vector α n) (x : α), C xs → C (xs.push x)) :
-  induction empty push #v[] = empty := by grind
+  induction empty push #v[] = empty := by grind [induction]
 
-@[simp]
+@[simp, grind =]
 theorem induction_push {C : ∀ {n : ℕ}, Vector α n → Sort*} (empty : C #v[])
     (push : ∀ (n : ℕ) (xs : Vector α n) (x : α), C xs → C (xs.push x)) (xs : Vector α n) (x : α) :
     induction empty push (xs.push x) = push ((n + 1) - 1) xs x (induction empty push xs) := by
+  simp only [Nat.add_one_sub_one, induction]
   grind [pop_push]
 
-@[elab_as_elim, cases_eliminator, grind =]
+@[elab_as_elim, cases_eliminator]
 def cases {C : ∀ {n : ℕ}, Vector α n → Sort*}
     (empty : C #v[])
     (push : ∀ (n : ℕ) (xs : Vector α n) (x : α), C (xs.push x))
@@ -131,12 +132,12 @@ def cases {C : ∀ {n : ℕ}, Vector α n → Sort*}
 @[simp]
 theorem cases_empty {C : ∀ {n : ℕ}, Vector α n → Sort*} (empty : C #v[])
     (push : ∀ (n : ℕ) (xs : Vector α n) (x : α), C (xs.push x)) :
-  cases empty push #v[] = empty := by grind
+  cases empty push #v[] = empty := by grind [Vector.cases]
 
 @[simp]
 theorem cases_push {C : ∀ {n : ℕ}, Vector α n → Sort*} (empty : C #v[])
     (push : ∀ (n : ℕ) (xs : Vector α n) (x : α), C (xs.push x)) (xs : Vector α n) (x : α) :
-    cases empty push (xs.push x) = push ((n + 1) - 1) xs x := by grind [pop_push]
+    cases empty push (xs.push x) = push ((n + 1) - 1) xs x := by grind [Vector.cases]
 
 theorem exists_getElem_push (f : α → Prop) {c : Vector α n} (b : α) {k : Nat} :
     (∃ (hk : k < n + 1), f (c.push b)[k]) ↔ k = n ∧ f b ∨ ∃ (hk : k < n), f c[k] := by grind

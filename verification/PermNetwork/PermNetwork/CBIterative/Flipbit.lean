@@ -997,6 +997,8 @@ end CondFlipBit
 
 section FlipBitCommutator
 
+open scoped commutatorElement
+
 variable {n p : ℕ}
 
 def flipBitCommutator (a : PermOf n) (i : ℕ) : PermOf n :=

@@ -1,7 +1,7 @@
 import PermNetwork.CBRecursive.Commutator
 import PermNetwork.CBRecursive.Cycles
 
-set_option autoImplicit false
+open scoped commutatorElement
 
 universe u
 
