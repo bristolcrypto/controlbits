@@ -25,14 +25,19 @@ The implementations in `src/sorting/` are
 
 
 ## Benchmarks
-`benchmarks` contains two Python scripts to benchmark the performance of the various algorithms and reproduce the tables in the paper.
+`benchmarks` contains two Python scripts to benchmark the performance of the various algorithms and reproduce the Tables 1 and 2 in the paper.
 
 ## Tests
-`tests` contains both correctness tests and constant time testing for the various combinations of control bit and sorting algorithm. The correctness tests simply try the algorithms several times and check that the control bits produced do in fact realise the permutation they were calculated from.
+`tests` contains 
+1. Correctness tests for control bit implementations. These tests simply try the algorithms several times and check that the control bits produced do in fact realise the permutation they were calculated from.
+2. Constant-time tests for control bit implementations. These tests run the implementations and check for constant-time violations.
+3. A small extension of Daniel Bernstein's `sortverif` toolkit for verifying interlaced sorting networks.
 
 
 ## Requirements
-`clang`, `gcc`, `python3`, `valgrind`
+1. Essentials: `clang`, `gcc`, `python3`,
+2. Constant time: `valgrind`,
+3. Benchmarking: `libcpucycles`
 
 ## Build and run `demo.c`
 There is a range of combinations of controlbit algorithm, sorting algorithm, and sorting type you can try. The options are controlled by defining macros:
