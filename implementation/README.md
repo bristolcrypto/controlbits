@@ -38,6 +38,13 @@ The implementations in `src/sorting/` are
 1. Essentials: `clang`, `gcc`, `python3`,
 2. Constant time: `valgrind`,
 3. Benchmarking: `libcpucycles`
+4. Sorting verification: `angr`, `pyparsing`
+
+The benchmarks and tests recorded in the paper were performed on an `Ubuntu 24.04.4 LTS` machine with
+1. `Ubuntu clang version 18.1.3`, `gcc version 13.3.0`, `python 3.12.3`, 
+2. `valgrind-3.22.0`,
+3. `libcpucycles version 20260105`,
+4. `angr version 9.2.209`, `pyparsing version 3.3.2`.
 
 ## Build and run `demo.c`
 There is a range of combinations of controlbit algorithm, sorting algorithm, and sorting type you can try. The options are controlled by defining macros:

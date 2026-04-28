@@ -3,7 +3,8 @@ This repository accompanies the included paper and serves as an adjunct containi
 It contains three subdirectories.
 
 ## ./specification
-This contains a prototype Python implementation of our iterative control bits algorithm.
+This contains reference Python implementations of the algorithms presented in the paper. 
+Each Python function is named after its corresponding algorithm in the paper.
 
 ## ./verification
 This contains a single folder, `PermNetwork`, which is a monolithic Lean project folder.
@@ -11,7 +12,7 @@ This contains a single folder, `PermNetwork`, which is a monolithic Lean project
 development - but multiple repositories have been combined here in order to create a more coherent
 artifact story).
 
-## ./verification/PermNetwork
+### ./verification/PermNetwork
 `PermNetwork` is a `Mathlib`-dependent `Lean` project folder. The standard `Lean` build tool, `lake`,
 should be used to manage this. `lake` manages different versions of the `Lean` toolchain:
 the file `lean-toolchain` and `lakefile.toml` define its toolchain and dependencies, but you
@@ -36,4 +37,10 @@ so-called "proof API" around our core definitions. This aids readability, re-use
 (and is just generally a desirable practice).
 
 ## ./implementation
-Sam to do.
+This contains all materials relevent to the Section 5: "Implementation and evaluation". The subdirectory
+`src` contains the source code, `benchmarks` contains Python scripts that reproduce Tables 1 and 2. `docs`
+contains supplementary documentation explaining the implementation techniques and background on interlaced
+and permuted sorting networks. `tests` contains `bash` scripts that run correctness tests, constant-time tests,
+and an adaptation to `djbsort`'s `sortverif` toolkit to verify the correcness of interlaced sorting networks. 
+
+See the subdirectories' `README`s for more information.
