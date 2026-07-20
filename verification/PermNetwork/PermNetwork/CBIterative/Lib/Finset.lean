@@ -45,5 +45,4 @@ theorem card_bitMatchUnder (i : ℕ) (x : Fin (2 ^ n)) :
 
 end BitMatchUnder
 
-
 end Finset

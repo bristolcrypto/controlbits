@@ -1,5 +1,5 @@
 import PermNetwork.CBIterative.Flipbit
-
+set_option linter.style.header false
 namespace PermOf
 
 variable {n i p k : ℕ} {a : PermOf (2 ^ (n + 1))}
@@ -68,7 +68,7 @@ theorem leftLayer_eq_of_bitInvariant_lt {a : PermOf (2 ^ (n + 1))}
 
 theorem getElem_zero_leftLayer_zero :
     (leftLayer a 0)[0] = false := getElem_leftLayer_of_lt_of_bitInvariant_lt
-      (by simp only [not_lt_zero', IsEmpty.forall_iff, implies_true]) (Nat.two_pow_pos _)
+      (by simp only [not_lt_zero, IsEmpty.forall_iff, implies_true]) (Nat.two_pow_pos _)
 
 end LeftLayer
 
@@ -217,8 +217,7 @@ theorem testBit_rightPerm {i : ℕ}
         (period_le_two_pow_sub_of_bitInvariant_lt ha), getElem_flipBitVals_of_div hin,
         a.flipBit_getElem_cycleMinVector_flipBitCommutator_comm ha a.getElem_lt
         (Nat.lt_succ_of_le hi)]
-    · simp_rw [hkb ▸ insertBit_testBit_removeBit_of_eq, hkb, Bool.not_false, Bool.if_true_left,
-        Bool.decide_eq_true, Bool.or_false]
+    · grind
   · simp_rw [getElem_leftPerm_of_gt hi, getElem_rightPerm_of_gt hi,
       (bitInvariant_of_ge (Nat.pow_le_pow_of_le one_lt_two hi)).testBit_getElem_eq_testBit]
 
@@ -284,7 +283,7 @@ theorem leftPerm_mul_middlePerm_mul_rightPerm :
 @[simp] theorem bitInvariant_middlePerm_zero :
     (middlePerm a 0).BitInvariant 0 :=
   bitInvariant_middlePerm
-    (by simp_rw [not_lt_zero', IsEmpty.forall_iff, implies_true]) _ zero_lt_one
+    (by simp_rw [not_lt_zero, IsEmpty.forall_iff, implies_true]) _ zero_lt_one
 
 theorem bitInvariant_middlePerm_of_gt {i : ℕ} {j : ℕ} (hj : n < j) :
   (middlePerm a i).BitInvariant j := bitInvariant_of_ge (Nat.pow_le_pow_of_le one_lt_two hj)
@@ -380,7 +379,7 @@ def middlePermIth (a : PermOf (2 ^ (n + 1))) (i : ℕ) : PermOf (2 ^ (n + 1)) :=
 @[simp] theorem middlePermIth_bitInvariant :
     ∀ j < i, (a.middlePermIth i).BitInvariant j := by
   induction i generalizing a with | zero => _ | succ i IH => _
-  · simp_rw [not_lt_zero', IsEmpty.forall_iff, implies_true]
+  · simp_rw [not_lt_zero, IsEmpty.forall_iff, implies_true]
   · simp_rw [middlePermIth_succ]
     exact bitInvariant_middlePerm IH
 

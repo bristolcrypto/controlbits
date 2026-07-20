@@ -480,8 +480,9 @@ namespace Fin
 
 end Fin
 
-namespace BitVec
 open Nat
+
+namespace BitVec
 
 variable {w} {b : Bool} {q : BitVec (w + 1)} {p : BitVec w} {i : Fin (w + 1)}
 

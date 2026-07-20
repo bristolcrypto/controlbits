@@ -1,13 +1,15 @@
 import Mathlib.GroupTheory.Commutator.Basic
 import Mathlib.Algebra.Group.Int.Defs
 
-open scoped commutatorElement
+set_option autoImplicit false
 
 section Group
 
 universe u
 
 variable {G : Type u} [Group G] {x y : G}
+
+open scoped commutatorElement
 
 lemma cmtr_inv_mul_eq_mul_inv_cmtr : ⁅x, y⁆⁻¹ * y = y * ⁅x, y⁻¹⁆ := by
   simp_rw [commutatorElement_inv, commutatorElement_def, inv_inv, mul_assoc]
@@ -45,6 +47,8 @@ section Perm
 open Equiv
 
 universe u
+
+open scoped commutatorElement
 
 variable {α : Type u} {x y : Perm α} {q : α}
 

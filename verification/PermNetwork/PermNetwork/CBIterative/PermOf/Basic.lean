@@ -3,22 +3,6 @@ import Mathlib.Algebra.Group.Action.Basic
 import Mathlib.Algebra.Group.MinimalAxioms
 import Mathlib.Data.Finite.Prod
 
-namespace Equiv
-
-variable {α β : Type*} [DecidableEq α]
-
-theorem swap_smul {R : Type*} [Group R] [MulAction R α] {i j k : α} {r : R} :
-    swap (r • i) (r • j) (r • k) = r • swap i j k :=
-  (MulAction.injective r).swap_apply _ _ _
-
-theorem swap_prop (p : α → Prop) {i j k : α} (hk : k ≠ i → k ≠ j → p k)
-    (hi : k = j → p i) (hj : k = i → p j) : p (swap i j k) := by grind
-
-theorem swap_prop_const (p : α → Prop) {i j k : α} (hk : p k)
-    (hi : p i) (hj : p j) : p (swap i j k) := by grind
-
-end Equiv
-
 /--
 A `PermOf n` is a permutation on `n` elements represented by two vectors, which we can
 think of as an array of values and a corresponding array of indexes which are inverse to
@@ -124,29 +108,25 @@ theorem getElem_inv_ne_iff (hi : i < n) (hj : j < n) :
 
 end Inv
 
-theorem mem_toVector_of_lt : ∀ i < n, i ∈ a.toVector :=
-    fun i hi => Vector.mem_of_getElem (h := by grind) (i := a⁻¹[i]) (by grind)
+theorem nodup_toVector : a.toVector.Nodup := by grind
 
-theorem mem_invVector_of_lt : ∀ i < n, i ∈ a.invVector :=
-    fun i hi => Vector.mem_of_getElem (h := by grind) (i := a[i]) (by grind)
-
-theorem lt_of_mem_toVector : ∀ i ∈ a.toVector, i < n := by
-  grind [Vector.mem_iff_getElem]
-
-theorem lt_of_mem_invVector : ∀ i ∈ a.invVector, i < n := by
-  grind [Vector.mem_iff_getElem]
+theorem nodup_invVector : a.invVector.Nodup := by grind
 
 @[grind =]
-theorem mem_toVector_iff_lt {i : ℕ} : i ∈ a.toVector ↔ i < n := by
-  grind [mem_toVector_of_lt, lt_of_mem_toVector]
+theorem mem_toVector_iff_lt {i : ℕ} : i ∈ a.toVector ↔ i < n :=
+  a.toVector.mem_iff_getElem.trans ⟨by grind, getElem_surjective⟩
 
 @[grind =]
-theorem mem_invVector_iff_lt {i : ℕ} : i ∈ a.invVector ↔ i < n := by
-  grind [mem_invVector_of_lt, lt_of_mem_invVector]
+theorem mem_invVector_iff_lt {i : ℕ} : i ∈ a.invVector ↔ i < n :=
+  a.invVector.mem_iff_getElem.trans ⟨by grind, a⁻¹.getElem_surjective⟩
 
-theorem toVector_nodup : a.toVector.Nodup := by grind
+theorem mem_toVector_of_lt : ∀ i < n, i ∈ a.toVector := by grind
 
-theorem invVector_nodup : a.invVector.Nodup := by grind
+theorem mem_invVector_of_lt : ∀ i < n, i ∈ a.invVector := by grind
+
+theorem lt_of_mem_toVector : ∀ i ∈ a.toVector, i < n := by grind
+
+theorem lt_of_mem_invVector : ∀ i ∈ a.invVector, i < n := by grind
 
 @[ext, grind ext]
 theorem ext (h : ∀ (i : ℕ) (hi : i < n), a[i] = b[i]) : a = b := by
@@ -194,7 +174,6 @@ def zeroEquivFinOne : PermOf 0 ≃ Fin 1 := Equiv.ofUnique _ _
 def oneEquivFinOne : PermOf 1 ≃ Fin 1 := Equiv.ofUnique _ _
 
 end One
-
 
 instance : Mul (PermOf n) where
   mul a b := {
@@ -366,16 +345,18 @@ theorem getElem_inv_swap :
     (a.swap i j hi hj)⁻¹[k] = if k = a[i] then j else if k = a[j] then i else a⁻¹[k] := by
   dsimp [swap]; grind
 
+theorem inv_swap : (a.swap i j hi hj)⁻¹ = a⁻¹.swap a[i] a[j] := by grind
+
 theorem swap_smul_eq_smul_swap :
     (a.swap i j hi hj) • k = a • (Equiv.swap i j k) := by grind
 
-theorem swap_inv_eq_swap_apply_inv_smul :
+theorem inv_swap_eq_swap_apply_inv_smul :
   (a.swap i j hi hj)⁻¹ • k = Equiv.swap i j (a⁻¹ • k) := by grind
 
 theorem swap_smul_eq_swap_apply_smul :
     (a.swap i j hi hj) • k = Equiv.swap (a • i) (a • j) (a • k) := by grind
 
-theorem swap_inv_smul_eq_inv_smul_swap : (a.swap i j hi hj)⁻¹ • k =
+theorem inv_swap_smul_eq_inv_smul_swap : (a.swap i j hi hj)⁻¹ • k =
     a⁻¹ • (Equiv.swap (a • i) (a • j) k) := by grind
 
 theorem swap_smul_left :
@@ -387,13 +368,13 @@ theorem swap_smul_right :
 theorem swap_smul_of_ne_of_ne {k} :
   k ≠ i → k ≠ j → (a.swap i j hi hj) • k = a • k := by grind
 
-theorem swap_inv_smul_left :
+theorem inv_swap_smul_left :
     (a.swap i j hi hj)⁻¹ • (a • i) = j := by grind
 
-theorem swap_inv_smul_right :
+theorem inv_swap_smul_right :
     (a.swap i j hi hj)⁻¹ • (a • j) = i := by grind
 
-theorem swap_inv_smul_of_ne_of_ne {k} :
+theorem inv_swap_smul_of_ne_of_ne {k} :
   k ≠ a • i → k ≠ a • j → (a.swap i j hi hj)⁻¹ • k = a⁻¹ • k := by grind
 
 @[simp]
@@ -409,30 +390,22 @@ theorem getElem_inv_one_swap : (swap 1 i j hi hj)⁻¹[k] = Equiv.swap i j k := 
 
 theorem one_swap_smul : (swap 1 i j hi hj) • k = Equiv.swap i j k := by grind
 
-theorem one_swap_inv_smul : (swap 1 i j hi hj)⁻¹ • k = Equiv.swap i j k := by grind [inv_one]
+theorem inv_one_swap_smul : (swap 1 i j hi hj)⁻¹ • k = Equiv.swap i j k := by grind [inv_one]
 
 theorem one_swap_mul_self : swap 1 i j hi hj * swap 1 i j hi hj = 1 := by grind
 
-theorem one_swap_inverse : (swap 1 i j hi hj)⁻¹ = swap 1 i j hi hj := by
-  ext : 1
-  rw [getElem_one_swap, getElem_inv_one_swap]
+theorem inv_one_swap : (swap 1 i j hi hj)⁻¹ = swap 1 i j hi hj := by grind
 
 theorem swap_eq_mul_one_swap : a.swap i j hi hj = a * swap 1 i j hi hj := by grind
 
-theorem swap_eq_one_swap_mul (hi' : a • i < n := a.smul_lt_iff_lt.mpr hi)
-    (hj' : a • j < n := a.smul_lt_iff_lt.mpr hj) :
-    a.swap i j hi hj = swap 1 _ _ hi' hj' * a := by
-  rw [eq_iff_smul_eq_smul_lt]
-  simp_rw [mul_smul, one_swap_smul, swap_smul_eq_smul_swap, swap_smul, implies_true]
+theorem swap_eq_one_swap_mul : a.swap i j hi hj = swap 1 a[i] a[j] (by grind) (by grind) * a := by
+  grind
 
-theorem swap_inv_eq_one_swap_mul :
-    (a.swap i j hi hj)⁻¹ = swap 1 i j hi hj * a⁻¹ := by
-  rw [swap_eq_mul_one_swap, mul_inv_rev, one_swap_inverse]
+theorem inv_swap_eq_one_swap_mul :
+    (a.swap i j hi hj)⁻¹ = swap 1 i j hi hj * a⁻¹ := by grind
 
-theorem swap_inv_eq_mul_one_swap (hi' : a • i < n := a.smul_lt_iff_lt.mpr hi)
-    (hj' : a • j < n := a.smul_lt_iff_lt.mpr hj) :
-    (a.swap i j hi hj)⁻¹ = a⁻¹ * swap 1 _ _ hi' hj' := by
-  rw [swap_eq_one_swap_mul, mul_inv_rev, mul_right_inj, one_swap_inverse]
+theorem inv_swap_eq_mul_one_swap :
+    (a.swap i j hi hj)⁻¹ = a⁻¹ * swap 1 a[i] a[j] (by grind) (by grind) := by grind
 
 end Swap
 
@@ -440,9 +413,38 @@ end PermOf
 
 namespace Vector
 
-variable {n : ℕ} {a b : PermOf n}
 
 open PermOf
+
+namespace Nodup
+
+def toPermOf {a : Vector ℕ n} (ha₁ : a.Nodup := by decide)
+    (ha₂ : ∀ x (h : x < n), a[x] < n := by decide) : PermOf n :=
+  ⟨a, (Vector.range n).map a.toList.idxOf, by have H := ha₁.nodup_toList.idxOf_getElem; grind⟩
+
+section ToPermOf
+
+@[simp, grind =]
+theorem getElem_toPermOf {a : Vector ℕ n} {ha₁ : a.Nodup}
+    {ha₂ : ∀ x (h : x < n), a[x] < n} {i : ℕ} (hi : i < n) :
+    (ha₁.toPermOf ha₂)[i] = a[i] := rfl
+
+@[simp] theorem toPermOf_toVector {a : PermOf n} :
+    toPermOf a.nodup_toVector (by grind) = a := by grind
+
+@[simp] theorem toPermOf_invVector {a : PermOf n} :
+    toPermOf a⁻¹.nodup_toVector (by grind) = a⁻¹ := by grind
+
+end ToPermOf
+
+end Nodup
+
+def permOfEquivNodupGetElemLt : PermOf n ≃
+    Subtype (α := Vector ℕ n) (fun a => a.Nodup ∧ ∀ x (h : x < n), a[x] < n) where
+  toFun a := ⟨a.toVector, nodup_toVector, by grind⟩
+  invFun a := Nodup.toPermOf a.2.1 a.2.2
+  left_inv _ := Nodup.toPermOf_toVector
+  right_inv _ := Subtype.ext rfl
 
 def toPermOf (a : Vector ℕ n) (ha : ∀ x < n, x ∈ a := by decide) : PermOf n :=
   ⟨(Vector.range n).map a.toList.idxOf, a, fun {i hi} => by
@@ -455,24 +457,26 @@ section ToPermOf
 theorem getElem_toPermOf {a : Vector ℕ n} {ha : ∀ x < n, x ∈ a} {i : ℕ} (hi : i < n) :
     (toPermOf a ha)[i] = a[i] := rfl
 
-@[simp] theorem toPermOf_toVector : toPermOf a.toVector (by grind) = a := by grind
+@[simp] theorem toPermOf_toVector {a : PermOf n} :
+    toPermOf a.toVector (by grind) = a := by grind
 
-@[simp] theorem toPermOf_invVector : toPermOf a.invVector (by grind) = a⁻¹ := by grind
+@[simp] theorem toPermOf_invVector {a : PermOf n} :
+    toPermOf a.invVector (by grind) = a⁻¹ := by grind
 
-def permOfEquiv : PermOf n ≃ Subtype (α := Vector ℕ n) (∀ x < n, x ∈ ·) where
+end ToPermOf
+
+def permOfEquivForallLtMem : PermOf n ≃ Subtype (α := Vector ℕ n) (∀ x < n, x ∈ ·) where
   toFun a := ⟨a.toVector, mem_toVector_of_lt⟩
   invFun a := toPermOf a.1 a.2
   left_inv _ := toPermOf_toVector
   right_inv _ := Subtype.ext rfl
-
-end ToPermOf
 
 def shuffle {α : Type*} (a : PermOf n) (v : Vector α n) : Vector α n :=
   Vector.ofFn (fun i => v[a[i.1]])
 
 section Shuffle
 
-variable {α : Type*} {v : Vector α n}
+variable {α : Type*} {v : Vector α n} {a : PermOf n}
 
 @[simp, grind =] theorem getElem_shuffle {i : ℕ} (hi : i < n) :
     (v.shuffle a)[i] = v[a[i]] := Vector.getElem_ofFn _

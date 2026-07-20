@@ -1,6 +1,8 @@
 import Mathlib.Algebra.BigOperators.Fin
 import Mathlib.Data.Fin.Tuple.Sort
 
+set_option linter.style.header false
+
 instance [IsEmpty α] (p : α → Prop) : DecidablePred p := (.isFalse <| fun _ => isEmptyElim ·)
 
 namespace Fin
@@ -270,7 +272,7 @@ theorem cSwaps_map_map_perm_perm {f : Tuple α n} {π : Perm (Fin n)} {l : Compa
 
 section CSwapsPerm
 
-@[specialize] def cSwapsPerm [LinearOrder α] (f : Tuple α n) (l : ComparatorNetwork n) :
+@[specialize] def cSwapsPerm (f : Tuple α n) (l : ComparatorNetwork n) :
     Perm (Fin n) := (l.foldl (fun fπ ij => (fπ.1.cSwap ij,
     fπ.2 * fπ.1.cSwapPerm ij)) (f, 1)) |>.2
 

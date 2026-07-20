@@ -64,7 +64,7 @@ theorem period_eq_one_of_one (a : PermOf 1) {i : ℕ} : MulAction.period a i = 1
   rw [Unique.eq_default a, default_eq, MulAction.period_one]
 
 theorem period_le_card_of_getElem_pow_mem (a : PermOf n) {i : ℕ} (hi : i < n)
-  (s : Finset ℕ) : (∀ k ≤ s.card, (a ^ k)[i] ∈ s) → MulAction.period a i ≤ s.card := by
+  (s : Finset ℕ) : (∀ k < s.card + 1, (a ^ k)[i] ∈ s) → MulAction.period a i ≤ s.card := by
   simp_rw [← smul_of_lt hi]
   exact MulAction.period_le_card_of_smul_pow_mem _ _
 
@@ -78,11 +78,9 @@ theorem period_le_of_lt (a : PermOf n) {i : ℕ} (hi : i < n) : MulAction.period
     (Finset.card_range _)
   simp_rw [Finset.card_range, Finset.mem_range, getElem_lt, implies_true]
 
-theorem period_le_of_ne_zero [NeZero n] (a : PermOf n) {i : ℕ} : MulAction.period a i ≤ n := by
-  rcases lt_or_ge i n with hi | hi
-  · exact a.period_le_of_lt hi
-  · rw [a.period_eq_one_of_ge hi]
-    exact NeZero.pos n
+theorem period_le_of_neZero [NeZero n] (a : PermOf n) {i : ℕ} : MulAction.period a i ≤ n :=
+  (lt_or_ge i n).by_cases
+  a.period_le_of_lt <| NeZero.one_le.trans_eq' ∘ Eq.symm ∘ a.period_eq_one_of_ge
 
 theorem exists_pos_le_pow_getElem_eq (a : PermOf n) {i : ℕ} (hi : i < n) :
     ∃ k, 0 < k ∧ k ≤ n ∧ (a ^ k)[i] = i :=
@@ -332,7 +330,7 @@ lemma le_getElem_cycleMin_iff (a : PermOf n) (i : ℕ) {x y : ℕ}
 
 theorem getElem_zero_cycleMinVector [NeZero n]
     {a : PermOf n} {k : ℕ} : (a.CycleMinVector k)[0]'(NeZero.pos _) = 0 :=
-  getElem_cycleMinVector_of_self_le_getElem (fun _ => zero_le _)
+  getElem_cycleMinVector_of_self_le_getElem (fun _ => zero_le)
 
 lemma getElem_cycleMinVector_eq_min'_cycleOf (a : PermOf n) {i : ℕ} {x : ℕ}
       (hai : MulAction.period a x ≤ 2 ^ i) (hx : x < n) :

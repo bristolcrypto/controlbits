@@ -43,23 +43,23 @@ lemma getRes_apply : getRes i q = (getBitRes i q).snd := rfl
 lemma mergeBitRes_apply : mergeBitRes i b p = (getBitRes i).symm (b, p) := rfl
 
 lemma getBitRes_apply_zero {i : Fin (m + 1)} : getBitRes i 0 = (false, 0) := by
-ext
-· simp only [getBitRes_apply, finFunctionFinEquiv, Equiv.ofRightInverseOfCardLE_symm_apply,
-  Fin.val_zero, Nat.zero_div, Nat.zero_mod, Fin.zero_eta, Fin.isValue, finTwoEquiv_apply,
-  Fin.zero_eq_one_iff, Nat.reduceAdd, OfNat.ofNat_ne_one, decide_false,
-  Equiv.ofRightInverseOfCardLE_apply, zero_mul, Finset.sum_const_zero]
-· simp only [getBitRes_apply, finTwoEquiv_apply, Fin.isValue, finFunctionFinEquiv_apply_val,
-  finFunctionFinEquiv_symm_apply_val, Fin.val_zero, Nat.zero_div, Nat.zero_mod, zero_mul,
-  Finset.sum_const_zero]
+  ext
+  · simp only [getBitRes_apply, finFunctionFinEquiv, Equiv.ofRightInverseOfCardLE_symm_apply,
+    Fin.val_zero, Nat.zero_div, Nat.zero_mod, Fin.zero_eta, Fin.isValue, finTwoEquiv_apply,
+    Fin.zero_eq_one_iff, Nat.reduceAdd, OfNat.ofNat_ne_one, decide_false,
+    Equiv.ofRightInverseOfCardLE_apply, zero_mul, Finset.sum_const_zero]
+  · simp only [getBitRes_apply, finTwoEquiv_apply, Fin.isValue, finFunctionFinEquiv_apply_val,
+    finFunctionFinEquiv_symm_apply_val, Fin.val_zero, Nat.zero_div, Nat.zero_mod, zero_mul,
+    Finset.sum_const_zero]
 
 lemma getBit_apply_zero {i : Fin (m + 1)} : getBit i 0 = false := by
-rw [getBit_apply, getBitRes_apply_zero]
+  rw [getBit_apply, getBitRes_apply_zero]
 
 lemma getRes_apply_zero {i : Fin (m + 1)} : getRes i 0 = 0 := by
-rw [getRes_apply, getBitRes_apply_zero]
+  rw [getRes_apply, getBitRes_apply_zero]
 
 lemma mergeBitRes_apply_false_zero {i : Fin (m + 1)} : mergeBitRes i false 0 = 0 := by
-rw [mergeBitRes_apply, ← getBitRes_apply_zero (i := i), Equiv.symm_apply_apply]
+  rw [mergeBitRes_apply, ← getBitRes_apply_zero (i := i), Equiv.symm_apply_apply]
 
 lemma getBitRes_apply_two_pow {i : Fin (m + 1)} : getBitRes i ⟨2^(i : ℕ),
   pow_lt_pow_right₀ one_lt_two i.isLt⟩ = (true, 0) := by
@@ -121,7 +121,9 @@ lemma getBitRes_zero_apply : getBitRes (0 : Fin (m + 1)) q = (finTwoEquiv q.modN
   simp_rw [getBitRes_zero, getBitResZero_apply]
 
 lemma getBitRes_zero_symm_apply : (getBitRes (0 : Fin (m + 1))).symm (b, p) =
-  finProdFinEquiv (p, bif b then 1 else 0) := by simp_rw [getBitRes_zero, getBitResZero_symm_apply]
+    finProdFinEquiv (p, bif b then 1 else 0) := by
+  ext
+  simp_rw [getBitRes_zero, getBitResZero_symm_apply]
 
 lemma getBit_zero : getBit 0 q = finTwoEquiv q.modNat := by
   simp_rw [getBit_apply, getBitRes_zero_apply]
@@ -129,13 +131,14 @@ lemma getBit_zero : getBit 0 q = finTwoEquiv q.modNat := by
 lemma getRes_zero : getRes 0 q = q.divNat := by
   simp_rw [getRes_apply, getBitRes_zero_apply]
 
-lemma mergeBitRes_zero : mergeBitRes 0 b p = finProdFinEquiv (p, (bif b then 1 else 0)) := by
+lemma mergeBitRes_zero : mergeBitRes 0 b p =
+    (finProdFinEquiv (p, (bif b then 1 else 0)) : BV (m + 1)) := by
   simp_rw [mergeBitRes_apply, getBitRes_zero_symm_apply]
+  rfl
 
 lemma mergeBitRes_zero_divNat_modNat : ((mergeBitRes 0 b p).divNat, (mergeBitRes 0 b p).modNat) =
-  (p, (bif b then 1 else 0)) := by
-  simp_rw [← finProdFinEquiv_symm_apply, Equiv.symm_apply_eq]
-  exact mergeBitRes_zero
+    (p, bif b then 1 else 0) := by
+  simp only [mergeBitRes_zero, ← finProdFinEquiv_symm_apply, Equiv.symm_apply_apply]
 
 lemma mergeBitRes_zero_divNat : (mergeBitRes 0 b p).divNat = p :=
 (Prod.ext_iff.mp (mergeBitRes_zero_divNat_modNat (b := b) (p := p))).1
@@ -144,16 +147,16 @@ lemma mergeBitRes_zero_modNat : (mergeBitRes 0 b p).modNat = bif b then 1 else 0
 (Prod.ext_iff.mp (mergeBitRes_zero_divNat_modNat (b := b) (p := p))).2
 
 lemma mergeBitRes_zero_apply_true_zero_eq_one : mergeBitRes (0 : Fin (m + 1)) true 0 = 1 := by
-  simp_rw [mergeBitRes_zero]
-  apply Fin.ext
-  simp_rw [finProdFinEquiv_apply_val, Fin.val_zero, mul_zero,
-  add_zero, Bool.cond_true, Fin.val_one, Fin.val_one', Nat.one_mod_two_pow (Nat.succ_pos _)]
+  ext
+  simp_rw [mergeBitRes_zero, finProdFinEquiv_apply_val, Fin.val_zero, mul_zero,
+  add_zero, Bool.cond_true, Fin.val_one, Fin.val_one',
+  Nat.mod_eq_of_lt (Nat.one_lt_pow' _ _ )]
 
 lemma mergeBitRes_base_true {i : Fin 1} {p : BV 0} : mergeBitRes (m := 0) i true p = 1 := by
-rw [Fin.eq_zero p, Fin.eq_zero i] ; exact mergeBitRes_zero_apply_true_zero_eq_one
+  rw [Fin.eq_zero p, Fin.eq_zero i] ; exact mergeBitRes_zero_apply_true_zero_eq_one
 
 lemma mergeBitRes_base_false {i : Fin 1} {p : BV 0} : mergeBitRes (m := 0) i false p = 0 := by
-rw [Fin.eq_zero p] ; exact mergeBitRes_apply_false_zero
+  rw [Fin.eq_zero p] ; exact mergeBitRes_apply_false_zero
 
 lemma mergeBitRes_base {i : Fin 1} {p : BV 0} : mergeBitRes (m := 0) i b p = if b then 1 else 0 :=
   b.rec mergeBitRes_base_false mergeBitRes_base_true
@@ -317,15 +320,15 @@ lemma mergeBitRes_succAbove {j : Fin (m + 2)} {i : Fin (m + 1)} {q : BV (m + 1)}
 
 @[simp]
 lemma getBit_mergeBitRes : getBit i (mergeBitRes i b p) = b := by
-simp_rw [getBit_apply, mergeBitRes_apply, Equiv.apply_symm_apply]
+  simp_rw [getBit_apply, mergeBitRes_apply, Equiv.apply_symm_apply]
 
 @[simp]
 lemma getRes_mergeBitRes : getRes i (mergeBitRes i b p) = p := by
-simp_rw [getRes_apply, mergeBitRes_apply, Equiv.apply_symm_apply]
+  simp_rw [getRes_apply, mergeBitRes_apply, Equiv.apply_symm_apply]
 
 @[simp]
 lemma mergeBitRes_getBit_getRes : mergeBitRes i (getBit i q) (getRes i q) = q := by
-simp_rw [getRes_apply, mergeBitRes_apply, getBit_apply, Prod.mk.eta, Equiv.symm_apply_apply]
+  simp_rw [getRes_apply, mergeBitRes_apply, getBit_apply, Prod.mk.eta, Equiv.symm_apply_apply]
 
 lemma mergeBitRes_surj (i : Fin (m + 1)) (q : BV (m + 1)) :
   ∃ b p, mergeBitRes i b p = q :=
@@ -377,7 +380,7 @@ lemma ne_mergeBitRes_iff :
     rw [← mergeBitRes_ne_iff, ne_comm]
 
 lemma mergeBitRes_getRes_of_getBit_eq (h : getBit i q = b) : mergeBitRes i b (getRes i q) = q := by
-simp_rw [← h, mergeBitRes_getBit_getRes]
+  simp_rw [← h, mergeBitRes_getBit_getRes]
 
 lemma mergeBitRes_getRes_cases (i : Fin (m + 1)) (q : BV (m + 1)) :
 (getBit i q = false ∧ mergeBitRes i false (getRes i q) = q) ∨
@@ -388,10 +391,10 @@ lemma mergeBitRes_getRes_cases (i : Fin (m + 1)) (q : BV (m + 1)) :
   · simp_rw [or_true]
 
 lemma mergeBitRes_getBit_of_getRes_eq (h : getRes i q = p) : mergeBitRes i (getBit i q) p = q := by
-simp_rw [← h, mergeBitRes_getBit_getRes]
+  simp_rw [← h, mergeBitRes_getBit_getRes]
 
 lemma mergeBitRes_inv (h₁ : getBit i q = b) (h₂ : getRes i q = p) : mergeBitRes i b p = q := by
-simp_rw [← h₁, ← h₂, mergeBitRes_getBit_getRes]
+  simp_rw [← h₁, ← h₂, mergeBitRes_getBit_getRes]
 
 lemma getRes_inv (i : Fin (m + 1)) (h : mergeBitRes i (getBit i q) p = q) : getRes i q = p := by
   rcases mergeBitRes_surj i q with ⟨b, p', rfl⟩ ; rw [getRes_mergeBitRes]
@@ -428,7 +431,7 @@ lemma getRes_surj (i : Fin (m + 1)) (q : BV (m + 1)) :
 
 lemma ne_iff_getBit_ne_or_getRes_ne (i : Fin (m + 1)) :
 getBit i q₁ ≠ getBit i q₂ ∨ getRes i q₁ ≠ getRes i q₂ ↔ q₁ ≠ q₂  := by
-rw [ne_eq q₁, ← getRes_getBit_inj_iff i, not_and_or]
+  rw [ne_eq q₁, ← getRes_getBit_inj_iff i, not_and_or]
 
 lemma ne_of_getBit_ne (i : Fin (m + 1)) (h : getBit i q₁ ≠ getBit i q₂) :
 q₁ ≠ q₂ := (ne_iff_getBit_ne_or_getRes_ne i).mp (Or.inl h)
@@ -440,10 +443,10 @@ end GetMerge
 
 section bitInvar
 
-def bitInvar (i : Fin (m + 1)) (f : Function.End (BV (m + 1))) : Prop :=
+def bitInvar (i : Fin (m + 1)) (f : BV (m + 1) → BV (m + 1)) : Prop :=
   ∀ q, getBit i (f q) = getBit i q
 
-variable {f g : Function.End (BV (m + 1))}
+variable {f g : BV (m + 1) → BV (m + 1)}
 
 lemma bitInvar_iff_getBit_apply_eq_getBit :
   bitInvar i f ↔ ∀ q, getBit i (f q) = getBit i q := Iff.rfl
@@ -456,20 +459,12 @@ lemma getBit_apply_eq_getBit_of_bitInvar (h : bitInvar i f) : getBit i (f q) = g
 bitInvar_iff_getBit_apply_eq_getBit.mp h _
 
 lemma bitInvar_comp_of_bitInvar (hf : bitInvar i f) (hg : bitInvar i g) : bitInvar i (f ∘ g) :=
-  fun q => by simp_rw [Function.comp_apply, hf (g q), hg q]
-
-lemma bitInvar_mul_of_bitInvar (hf : bitInvar i f) (hg : bitInvar i g) : bitInvar i (f * g) :=
-  bitInvar_comp_of_bitInvar hf hg
+  fun q => by simp [Function.comp_apply, hf (g q), hg q]
 
 lemma bitInvar_of_comp_bitInvar_bitInvar (hfg : bitInvar i (f ∘ g)) (h : bitInvar i f) :
   bitInvar i g := fun q => by rw [← h (g q), ← hfg q, Function.comp_apply]
 
-lemma bitInvar_of_mul_bitInvar_bitInvar (hfg : bitInvar i (f * g)) (h : bitInvar i f) :
-  bitInvar i g := bitInvar_of_comp_bitInvar_bitInvar hfg h
-
 lemma id_bitInvar : bitInvar i id := fun _ => rfl
-
-lemma one_bitInvar : bitInvar i 1 := id_bitInvar
 
 lemma bitInvar_of_rightInverse_bitInvar (hfg : Function.RightInverse g f) (h : bitInvar i f) :
   bitInvar i g := bitInvar_of_comp_bitInvar_bitInvar (hfg.comp_eq_id ▸ id_bitInvar) h
@@ -507,30 +502,62 @@ lemma bitInvar_of_inv_bitInvar {π : Equiv.Perm (BV (m + 1))}
 
 lemma bitInvar_mulPerm_of_bitInvar {π ρ : Equiv.Perm (BV (m + 1))} (hπ : bitInvar i ⇑π)
   (hρ : bitInvar i ⇑ρ) : bitInvar i ⇑(π*ρ) :=
-  Equiv.Perm.coe_mul _ _ ▸ bitInvar_mul_of_bitInvar hπ hρ
+  Equiv.Perm.coe_mul _ _ ▸ bitInvar_comp_of_bitInvar hπ hρ
 
 lemma bitInvar_of_mulPerm_bitInvar_bitInvar {π ρ : Equiv.Perm (BV (m + 1))}
   (hfg : bitInvar i ⇑(π * ρ : Equiv.Perm (BV (m + 1)))) (h : bitInvar i ⇑π) : bitInvar i ⇑ρ :=
-  bitInvar_of_mul_bitInvar_bitInvar hfg h
+  bitInvar_of_comp_bitInvar_bitInvar hfg h
 
-lemma onePerm_bitInvar {i : Fin (m + 1)} : bitInvar i ⇑(1 : Equiv.Perm (BV (m + 1))) :=
-one_bitInvar
+lemma onePerm_bitInvar {i : Fin (m + 1)} : bitInvar i ⇑(1 : Equiv.Perm (BV (m + 1))) := id_bitInvar
+
+def ofPairBVMap (i : Fin (m + 1)) (fg : Bool → BV m → BV m) (q : BV (m + 1)) : BV (m + 1) :=
+    mergeBitRes i (getBit i q) (fg (getBit i q) (getRes i q))
+
+variable {φ ψ : Bool → BV m → BV m}
+
+@[simp]
+lemma ofPairEndBV_apply :  ofPairBVMap i φ q =
+    mergeBitRes i (getBit i q) (φ (getBit i q) (getRes i q)) := rfl
+
+lemma bitInvar_ofPairEndBV {fg : Bool → BV m → BV m} :
+    bitInvar i (ofPairBVMap i fg) := bitInvar_of_getBit_apply_eq_getBit <| by simp
+
+def pairBVMap (i : Fin (m + 1)) (f : BV (m + 1) → BV (m + 1))
+    (b : Bool) (p : BV m) : BV m := getRes i (f (mergeBitRes i b p))
+
+@[simp]
+lemma pairBVMap_apply : pairBVMap i f b p = getRes i (f (mergeBitRes i b p)) := rfl
+
+theorem pairBVMap_ofPairBVMap : pairBVMap i (ofPairBVMap i φ) = φ := by ext; simp
+
+theorem ofPairBVMap_pairBVMap_of_bitInvar (hf : bitInvar i f) :
+    ofPairBVMap i (pairBVMap i f) = f := by
+  ext q;
+  rw [ofPairEndBV_apply, pairBVMap_apply, mergeBitRes_getBit_getRes,
+    ← getBit_apply_eq_getBit_of_bitInvar (q := q) hf]
+  simp
+
+theorem ofPairBVMap_comp : ofPairBVMap i φ ∘ ofPairBVMap i ψ =
+    ofPairBVMap i (fun b =>  φ b ∘ ψ b) := by
+  ext
+  simp
 
 section Submonoid
 
 def bitInvarSubmonoid (i : Fin (m + 1)) : Submonoid (Function.End (BV (m + 1))) where
   carrier f := bitInvar i f
-  mul_mem' ha hb := bitInvar_mul_of_bitInvar ha hb
-  one_mem' := one_bitInvar
+  mul_mem' ha hb := bitInvar_comp_of_bitInvar ha hb
+  one_mem' := id_bitInvar
 
 @[simp]
-lemma mem_bitInvarSubmonoid {i : Fin (m + 1)} : f ∈ bitInvarSubmonoid i ↔ bitInvar i f := Iff.rfl
+lemma mem_bitInvarSubmonoid {i : Fin (m + 1)} {f : Function.End (BV (m + 1))} :
+    f ∈ bitInvarSubmonoid i ↔ bitInvar i f := Iff.rfl
 
-lemma mem_bitInvarSubmonoid_of_bitInvar {i : Fin (m + 1)} (h : bitInvar i f) :
-  f ∈ bitInvarSubmonoid i := h
+lemma mem_bitInvarSubmonoid_of_bitInvar {i : Fin (m + 1)} {f : Function.End (BV (m + 1))}
+    (h : bitInvar i f) : f ∈ bitInvarSubmonoid i := h
 
-lemma bitInvar_of_mem_bitInvarSubmonoid {i : Fin (m + 1)} (h : f ∈ bitInvarSubmonoid i) :
-  bitInvar i f := h
+lemma bitInvar_of_mem_bitInvarSubmonoid {i : Fin (m + 1)} {f : Function.End (BV (m + 1))}
+    (h : f ∈ bitInvarSubmonoid i) : bitInvar i f := h
 
 end Submonoid
 
@@ -539,7 +566,7 @@ section Subgroup
 def bitInvarSubgroup (i : Fin (m + 1)) : Subgroup (Equiv.Perm (BV (m + 1))) where
   carrier π := bitInvar i ⇑π
   mul_mem' ha hb := bitInvar_mulPerm_of_bitInvar ha hb
-  one_mem' := one_bitInvar
+  one_mem' := onePerm_bitInvar
   inv_mem' ha := inv_bitInvar_of_bitInvar ha
 
 variable {π : Equiv.Perm (BV (m + 1))}
@@ -567,17 +594,11 @@ section Equivs
 
 def bitInvarMulEquivEnd (i : Fin (m + 1)) :
     (Bool → Function.End (BV m)) ≃* bitInvarSubmonoid i where
-  toFun feo := ⟨fun q => mergeBitRes i (getBit i q) (feo (getBit i q) (getRes i q)),
-    by simp_rw [mem_bitInvarSubmonoid, bitInvar_iff_getBit_apply_eq_getBit,
-      getBit_mergeBitRes, implies_true]⟩
-  invFun f := fun b p => getRes i (f.1 (mergeBitRes i b p))
-  left_inv feo := funext fun b => funext fun p => by
-    simp_rw [getBit_mergeBitRes, getRes_mergeBitRes]
-  right_inv f := Subtype.ext <| funext fun p => by
-    simp_rw [mergeBitRes_getBit_getRes, mergeBitRes_getRes_of_getBit_eq (f.2 p)]
-  map_mul' _ _ := Subtype.ext <| funext fun p => by
-    simp_rw [Pi.mul_apply, Submonoid.mk_mul_mk, Function.End.mul_def, Function.comp_apply,
-      getBit_mergeBitRes, getRes_mergeBitRes]
+  toFun φ := ⟨ofPairBVMap i φ, bitInvar_ofPairEndBV⟩
+  invFun f := pairBVMap i f
+  left_inv _ := pairBVMap_ofPairBVMap
+  right_inv f := Subtype.ext <| ofPairBVMap_pairBVMap_of_bitInvar f.2
+  map_mul' _ _ := Subtype.ext <| ofPairBVMap_comp.symm
 
 @[simp]
 theorem bitInvarMulEquivEnd_apply_val_apply (feo : Bool → Function.End (BV m)) :
@@ -637,13 +658,13 @@ lemma flipBit_zero : flipBit 0 q = finProdFinEquiv (q.divNat, q.modNat.rev) := b
 
 @[simp]
 lemma flipBit_mergeBitRes : flipBit i (mergeBitRes i b p) = mergeBitRes i (!b) p := by
-rw [flipBit_apply, getBit_mergeBitRes, getRes_mergeBitRes]
+  rw [flipBit_apply, getBit_mergeBitRes, getRes_mergeBitRes]
 
 lemma flipBit_mergeBitRes_false : flipBit i (mergeBitRes i false k) = mergeBitRes i true k :=
-flipBit_mergeBitRes (b := false)
+  flipBit_mergeBitRes (b := false)
 
 lemma flipBit_mergeBitRes_true : flipBit i (mergeBitRes i true k) = mergeBitRes i false k :=
-flipBit_mergeBitRes (b := true)
+  flipBit_mergeBitRes (b := true)
 
 lemma flipBit_mergeBitRes_zero : flipBit 0 (mergeBitRes 0 b p) =
   finProdFinEquiv (p, bif b then 0 else 1) := by
@@ -658,8 +679,8 @@ lemma flipBit_mergeBitRes_zero_false : flipBit 0 (mergeBitRes 0 false p) = finPr
 flipBit_mergeBitRes_zero (b := false)
 
 lemma mergeBitRes_getRes_of_getBit_not (h : getBit i q = !b) :
-mergeBitRes i b (getRes i q) = flipBit i q := by
-simp_rw [flipBit_apply, h, Bool.not_not]
+    mergeBitRes i b (getRes i q) = flipBit i q := by
+  simp_rw [flipBit_apply, h, Bool.not_not]
 
 lemma mergeBitRes_getRes_cases_flipBit (i : Fin (m + 1)) (q) (b) :
   (getBit i q = b ∧ mergeBitRes i b (getRes i q) = q) ∨
@@ -825,8 +846,8 @@ lemma condFlipBit_base {c : BV 0 → Bool} {i : Fin 1} :
   cases (c 0) <;> rfl
 
 lemma condFlipBit_mergeBitRes : condFlipBit i c (mergeBitRes i b p) =
-mergeBitRes i (xor (c p) b) p := by
-rw [condFlipBit_apply_eq_mergeBitRes, getRes_mergeBitRes, getBit_mergeBitRes]
+    mergeBitRes i (xor (c p) b) p := by
+  rw [condFlipBit_apply_eq_mergeBitRes, getRes_mergeBitRes, getBit_mergeBitRes]
 
 @[simp]
 lemma condFlipBit_symm : (condFlipBit i c).symm = condFlipBit i c := rfl
@@ -840,8 +861,8 @@ lemma condFlipBit_condFlipBit : condFlipBit i c (condFlipBit i c q) = q :=
 
 @[simp]
 lemma condFlipBit_mul_self : (condFlipBit i c) * (condFlipBit i c) = 1 := by
-ext ; simp_rw [Equiv.Perm.coe_mul, Function.comp_apply,
-  condFlipBit_condFlipBit, Equiv.Perm.coe_one, id_eq]
+  ext ; simp_rw [Equiv.Perm.coe_mul, Function.comp_apply,
+    condFlipBit_condFlipBit, Equiv.Perm.coe_one, id_eq]
 
 variable {ρ : Equiv.Perm (BV (m + 1))}
 
@@ -863,13 +884,13 @@ lemma condFlipBit_refl_of_all_false : Equiv.refl _ = condFlipBit i (Function.con
 variable {d : BV m → Bool}
 
 lemma condFlipBit_apply_comm :
-condFlipBit i c (condFlipBit i d q) = condFlipBit i d (condFlipBit i c q) := by
-simp_rw [condFlipBit_apply_eq_mergeBitRes, getRes_mergeBitRes,
-  getBit_mergeBitRes, Bool.xor_left_comm]
+    condFlipBit i c (condFlipBit i d q) = condFlipBit i d (condFlipBit i c q) := by
+  simp_rw [condFlipBit_apply_eq_mergeBitRes, getRes_mergeBitRes,
+    getBit_mergeBitRes, Bool.xor_left_comm]
 
 lemma condFlipBit_comm :
-(condFlipBit i c) * (condFlipBit i d) = (condFlipBit i d) * (condFlipBit i c) := by
-ext ; simp_rw [Equiv.Perm.coe_mul, Function.comp_apply, condFlipBit_apply_comm]
+    (condFlipBit i c) * (condFlipBit i d) = (condFlipBit i d) * (condFlipBit i c) := by
+  ext ; simp_rw [Equiv.Perm.coe_mul, Function.comp_apply, condFlipBit_apply_comm]
 
 lemma condFlipBit_apply_comm_flipBit :
   condFlipBit i c (flipBit i q) = flipBit i (condFlipBit i c q) := by
@@ -880,22 +901,22 @@ lemma condFlipBit_comm_flipBit :
   rw [condFlipBit_flipBit_of_all_true, condFlipBit_comm]
 
 lemma condFlipBit_apply_flipBit :
-condFlipBit i c (flipBit i q) = bif c (getRes i q) then q else flipBit i q := by
-  rw [condFlipBit_apply_comm_flipBit]
-  rcases (c (getRes i q)).dichotomy with h | h <;> rw [condFlipBit_apply, h]
-  · simp_rw [cond_false]
-  · simp_rw [cond_true, flipBit_flipBit]
+  condFlipBit i c (flipBit i q) = bif c (getRes i q) then q else flipBit i q := by
+    rw [condFlipBit_apply_comm_flipBit]
+    rcases (c (getRes i q)).dichotomy with h | h <;> rw [condFlipBit_apply, h]
+    · simp_rw [cond_false]
+    · simp_rw [cond_true, flipBit_flipBit]
 
 @[simp]
 lemma getRes_condFlipBit_of_eq : getRes i (condFlipBit i c q) = getRes i q := by
-rcases (c (getRes i q)).dichotomy with h | h  <;> rw [condFlipBit_apply, h]
-· rfl
-· rw [cond_true, getRes_flipBit_of_eq]
+  rcases (c (getRes i q)).dichotomy with h | h  <;> rw [condFlipBit_apply, h]
+  · rfl
+  · rw [cond_true, getRes_flipBit_of_eq]
 
 lemma getBit_condFlipBit_of_eq : getBit i (condFlipBit i c q) =
 bif c (getRes i q) then !(getBit i q) else getBit i q := by
-rcases (c (getRes i q)).dichotomy with hc | hc <;>
-simp only [condFlipBit_apply, cond_false, hc, cond_true, getBit_flipBit_of_eq]
+  rcases (c (getRes i q)).dichotomy with hc | hc <;>
+  simp only [condFlipBit_apply, cond_false, hc, cond_true, getBit_flipBit_of_eq]
 
 lemma getBit_condFlipBit_of_ne {i j : Fin (m + 1)} (hij : i ≠ j) :
   getBit i ((condFlipBit j c) q) = getBit i q := by
@@ -923,21 +944,25 @@ lemma condFlipBit_succAbove_apply {j : Fin (m + 2)} {i : Fin (m + 1)} {c : BV (m
     flipBit_succAbove]
 
 lemma condflipBit_zero : condFlipBit 0 c q =
-  bif c (q.divNat) then
-  finProdFinEquiv (q.divNat, q.modNat.rev)
-  else q := by grind [condFlipBit_apply, flipBit_zero, getRes_zero]
+    bif c (q.divNat) then finProdFinEquiv (q.divNat, q.modNat.rev) else q := by
+  ext
+  simp_rw [condFlipBit_apply, flipBit_zero, getRes_zero]
+  rfl
 
 lemma condFlipBit_zero_mergeBitRes :
 condFlipBit 0 c (mergeBitRes 0 b p) = finProdFinEquiv (p, bif xor (c p) b then 1 else 0) := by
   simp_rw [condFlipBit_mergeBitRes, mergeBitRes_zero]
+  rfl
 
 lemma condFlipBit_zero_mergeBitRes_true :
 condFlipBit 0 c (mergeBitRes 0 true p) = finProdFinEquiv (p, bif c p then 0 else 1) := by
   simp_rw [condFlipBit_zero_mergeBitRes, Bool.xor_true, Bool.cond_not]
+  rfl
 
 lemma condFlipBit_zero_mergeBitRes_false :
 condFlipBit 0 c (mergeBitRes 0 false p) = finProdFinEquiv (p, bif c p then 1 else 0) := by
   simp_rw [condFlipBit_zero_mergeBitRes, Bool.xor_false]
+  rfl
 
 end CondFlipBit
 

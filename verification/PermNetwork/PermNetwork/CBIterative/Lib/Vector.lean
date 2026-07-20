@@ -1,4 +1,5 @@
 import Batteries.Data.Vector.Lemmas
+import Batteries.Data.List.Lemmas
 import PermNetwork.CBIterative.Lib.Array
 import PermNetwork.CBIterative.Lib.Nat
 import PermNetwork.CBIterative.Lib.Fin
@@ -36,7 +37,7 @@ theorem getElem_eraseIdx_right (v : Vector α n) (hki : i ≤ k) (hk : k < n - 1
   simp_rw [getElem_eraseIdx, dif_neg hki.not_gt]
 
 @[simp] theorem getElem_eraseIdx_zero (v : Vector α n) (hk : k < n - 1) :
-    (v.eraseIdx 0)[k] = v[k + 1] := getElem_eraseIdx_right _ (zero_le _) _
+    (v.eraseIdx 0)[k] = v[k + 1] := getElem_eraseIdx_right _ zero_le _
 
 @[simp] theorem getElem_tail' (v : Vector α (n + 1)) (hi : i < (n + 1) - 1) :
     @getElem (Vector α n) Nat α (fun _ i => i < n) instGetElemNatLt v.tail i hi = v[i + 1] :=
@@ -109,35 +110,13 @@ def induction {C : ∀ {n : ℕ}, Vector α n → Sort*} (empty : C #v[])
     (push : ∀ (n : ℕ) (xs : Vector α n) (x : α), C xs → C (xs.push x)) :
     {n : ℕ} → (xs : Vector α n) → C xs
   | 0, xs => xs.eq_empty ▸ empty
-  | _ + 1, xs => xs.push_pop_back ▸ push _ _ _ (induction empty push _)
+  | n + 1, xs => xs.push_pop_back ▸ push (n + 1 - 1) xs.pop xs.back (induction empty push _)
 
-@[simp, grind =]
-theorem induction_empty {C : ∀ {n : ℕ}, Vector α n → Sort*} (empty : C #v[])
-    (push : ∀ (n : ℕ) (xs : Vector α n) (x : α), C xs → C (xs.push x)) :
-  induction empty push #v[] = empty := by grind [induction]
-
-@[simp, grind =]
-theorem induction_push {C : ∀ {n : ℕ}, Vector α n → Sort*} (empty : C #v[])
-    (push : ∀ (n : ℕ) (xs : Vector α n) (x : α), C xs → C (xs.push x)) (xs : Vector α n) (x : α) :
-    induction empty push (xs.push x) = push ((n + 1) - 1) xs x (induction empty push xs) := by
-  simp only [Nat.add_one_sub_one, induction]
-  grind [pop_push]
-
-@[elab_as_elim, cases_eliminator]
+@[elab_as_elim, cases_eliminator, grind =]
 def cases {C : ∀ {n : ℕ}, Vector α n → Sort*}
     (empty : C #v[])
     (push : ∀ (n : ℕ) (xs : Vector α n) (x : α), C (xs.push x))
     {n : ℕ} (v : Vector α n) : C v := v.induction empty (fun _ _ _ _ => push _ _ _)
-
-@[simp]
-theorem cases_empty {C : ∀ {n : ℕ}, Vector α n → Sort*} (empty : C #v[])
-    (push : ∀ (n : ℕ) (xs : Vector α n) (x : α), C (xs.push x)) :
-  cases empty push #v[] = empty := by grind [Vector.cases]
-
-@[simp]
-theorem cases_push {C : ∀ {n : ℕ}, Vector α n → Sort*} (empty : C #v[])
-    (push : ∀ (n : ℕ) (xs : Vector α n) (x : α), C (xs.push x)) (xs : Vector α n) (x : α) :
-    cases empty push (xs.push x) = push ((n + 1) - 1) xs x := by grind [Vector.cases]
 
 theorem exists_getElem_push (f : α → Prop) {c : Vector α n} (b : α) {k : Nat} :
     (∃ (hk : k < n + 1), f (c.push b)[k]) ↔ k = n ∧ f b ∨ ∃ (hk : k < n), f c[k] := by grind
@@ -153,17 +132,22 @@ def Nodup (v : Vector α n) : Prop := ∀ {i} (hi : i < n) {j} (hj : j < n), v[i
 
 section Nodup
 
-@[grind =]
 theorem Nodup.getElem_inj_iff {i j : ℕ} {hi : i < n} {hj : j < n}
     (hv : v.Nodup) : v[i] = v[j] ↔ i = j := ⟨hv _ _, fun h => h ▸ rfl⟩
 
 theorem Nodup.getElem_ne_iff {i j : ℕ} {hi : i < n} {hj : j < n}
     (hv : v.Nodup) : v[i] ≠ v[j] ↔ i ≠ j := by simp_rw [ne_eq, hv.getElem_inj_iff]
 
+
+@[grind =]
+theorem nodup_iff_getElem_inj :
+    v.Nodup ↔ ∀ {i} {hi : i < n} {j} {hj : j < n}, v[i]'hi = v[j]'hj → i = j := by grind [Nodup]
+
+theorem nodup_empty : Nodup (#v[] : Vector α 0) := by grind
+
 @[grind =]
 theorem nodup_iff_getElem_ne_getElem :
-    v.Nodup ↔ ∀ {i j}, (hij : i < j) → (hj : j < n) → v[i] ≠ v[j] :=
-  ⟨by grind, fun _ _ _ _ _ => Function.mtr <| by grind⟩
+    v.Nodup ↔ ∀ {i j}, (hij : i < j) → (hj : j < n) → v[i] ≠ v[j] := by grind [Nodup]
 
 theorem nodup_iff_injective_getElem : v.Nodup ↔ Injective (fun (i : Fin n) => v[(i : ℕ)]) := by
   unfold Injective Nodup
@@ -176,6 +160,11 @@ theorem nodup_iff_injective_get : v.Nodup ↔ Injective v.get := by
 theorem toList_nodup_iff_nodup : v.toList.Nodup ↔ v.Nodup := by
   grind [List.pairwise_iff_getElem]
 
+@[simp, grind =]
+theorem nodup_push {v : Vector α n} {x : α} : Nodup (v.push x) ↔ v.Nodup ∧ ¬ x ∈ v := by
+  grind [toList_nodup_iff_nodup, Vector.toList_push, mem_toList_iff]
+
+@[grind =>]
 theorem Nodup.nodup_toList (hv : v.Nodup) : v.toList.Nodup := toList_nodup_iff_nodup.mpr hv
 
 theorem _root_.List.Nodup.nodup_of_nodup_toList (hv : v.toList.Nodup) : v.Nodup :=

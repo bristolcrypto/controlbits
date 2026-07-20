@@ -1,6 +1,68 @@
+import Mathlib.Algebra.Order.Ring.Nat
+
 namespace Array
 
-variable {α β γ : Type u} {k i : Nat}
+variable {α β γ : Type*} {k i : ℕ}
+
+theorem lt_length_left_of_zipWith {f : α → β → γ} {i : ℕ} {xs : Array α} {bs : Array β}
+    (h : i < (xs.zipWith f bs).size) : i < xs.size := by
+  rw [Array.size_eq_length_toList] at h ⊢
+  rw [Array.toList_zipWith] at h
+  exact List.lt_length_left_of_zipWith h
+
+theorem lt_length_right_of_zipWith {f : α → β → γ} {i : ℕ} {xs : Array α} {bs : Array β}
+    (h : i < (xs.zipWith f bs).size) : i < bs.size := by
+  rw [Array.size_eq_length_toList] at h ⊢
+  rw [Array.toList_zipWith] at h
+  exact List.lt_length_right_of_zipWith h
+
+theorem lt_length_left_of_zip {i : ℕ} {xs : Array α} {bs : Array β} (h : i < (xs.zip bs).size) :
+    i < xs.size := lt_length_left_of_zipWith h
+
+theorem lt_length_right_of_zip {i : ℕ} {xs : Array α} {bs : Array β} (h : i < (xs.zip bs).size) :
+    i < bs.size := lt_length_right_of_zipWith h
+
+theorem getElem_swapIfInBounds_of_ge_left {xs : Array α} {i j k : ℕ} (h : xs.size ≤ i)
+    (hk : k < (xs.swapIfInBounds i j).size) :
+    (xs.swapIfInBounds i j)[k] = xs[k]'(hk.trans_eq xs.size_swapIfInBounds) := by
+  unfold swapIfInBounds
+  simp_rw [h.not_gt, dite_false]
+
+theorem getElem_swapIfInBounds_of_ge_right {xs : Array α} {i j k : ℕ} (h : xs.size ≤ j)
+    (hk : k < (xs.swapIfInBounds i j).size) :
+    (xs.swapIfInBounds i j)[k] = xs[k]'(hk.trans_eq xs.size_swapIfInBounds) := by
+  unfold swapIfInBounds
+  simp_rw [h.not_gt, dite_false, dite_eq_ite, ite_self]
+
+theorem eraseIdx_eq_take_append_drop_succ {xs : Array α} (hi : i < xs.size) :
+    xs.eraseIdx i = xs.take i ++ xs.extract (i + 1) xs.size := by
+  cases xs with | mk l => _
+  simp_rw [List.eraseIdx_toArray, List.take_toArray, List.size_toArray, List.extract_toArray,
+    List.append_toArray, mk.injEq, List.take_of_length_le List.length_drop.le,
+    List.eraseIdx_eq_take_drop_succ]
+
+theorem getElem_eraseIdx_left {xs : Array α} (hi : i < xs.size) (hki : k < i) :
+    (xs.eraseIdx i)[k]'(hki.trans_le ((Nat.le_pred_of_lt hi).trans_eq
+    (xs.size_eraseIdx _ _).symm)) = xs[k] := by
+  simp_rw [getElem_eraseIdx, dif_pos hki]
+
+theorem getElem_eraseIdx_right {xs : Array α} (hi : i < xs.size) (hki : i ≤ k)
+    (hk : k < (xs.eraseIdx i).size) :
+    (xs.eraseIdx i)[k] = xs[k + 1]'
+    (Nat.succ_lt_of_lt_pred (hk.trans_eq (xs.size_eraseIdx _ _))) := by
+  simp_rw [getElem_eraseIdx, dif_neg hki.not_gt]
+
+@[simp] theorem getElem_eraseIdx_zero {xs : Array α} (has : 0 < xs.size)
+    (hk : k < (xs.eraseIdx 0).size) :
+    (xs.eraseIdx 0)[k] = xs[k + 1]'
+    (Nat.succ_lt_of_lt_pred (hk.trans_eq (xs.size_eraseIdx _ _))) :=
+  getElem_eraseIdx_right _ zero_le _
+
+@[simp, grind =]
+theorem swap_same {xs : Array α} {i : Nat} {hi} : xs.swap i i hi hi = xs := by grind
+
+@[simp, grind =]
+theorem swapIfInBounds_same {xs : Array α} {i : Nat} : xs.swapIfInBounds i i = xs := by grind
 
 def bswap (xs : Array α) (b : Bool) (i j : Nat) (hi : i < xs.size := by get_elem_tactic)
     (hj : j < xs.size := by get_elem_tactic) : Array α := bif b then xs.swap i j else xs
@@ -57,5 +119,18 @@ def bswapIfInBoundsImpl (xs : Array α) (b : Bool) (i j : @& Nat) : Array α :=
 @[csimp] theorem bswapIfInBounds_eq_bswapIfInBoundsImpl :
     @bswapIfInBounds = @bswapIfInBoundsImpl := by
   ext <;> grind [bswapIfInBounds, bswapIfInBoundsImpl]
+
+theorem eq_push_pop_back_of_size_ne_zero {xs : Array α} (h : xs.size ≠ 0) :
+    xs = xs.pop.push (xs.back <| Nat.pos_of_ne_zero h) := by grind
+
+theorem back_push {v : Array α} {a : α} : (v.push a).back = a := by grind
+
+theorem exists_getElem_push (p : α → Prop) {c : Array α} (b : α) {k : Nat} :
+    (∃ (hk : k < (c.push b).size), p (c.push b)[k]) ↔
+    k = c.size ∧ p b ∨ ∃ (hk : k < c.size), p c[k] := by grind
+
+theorem forall_getElem_push (p : α → Prop) {c : Array α} (b : α) {k : Nat} :
+    (∀ (hk : k < (c.push b).size), p (c.push b)[k]) ↔
+    (k = c.size → p b) ∧ ∀ (hk : k < c.size), p c[k] := by grind
 
 end Array
