@@ -1,0 +1,29 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it using these metadata."
+title: "Verified non-recursive calculation of Beneš networks applied to Classic McEliece"
+abstract: >-
+  Artifacts accompanying the paper "Verified non-recursive calculation of Beneš
+  networks applied to Classic McEliece": reference Python specifications, a
+  Mathlib-dependent Lean formalisation and verified proofs of the control-bit
+  formulae, and portable and vectorised C implementations.
+type: software
+authors:
+  - given-names: Wrenna
+    family-names: Robson
+    email: wrenna.robson@bristol.ac.uk
+    affiliation: University of Bristol
+  - given-names: Samuel
+    family-names: Kelly
+    email: sam.j.kelly.2020@bristol.ac.uk
+    affiliation: University of Bristol
+license: MIT
+repository-code: "https://github.com/bristolcrypto/controlbits"
+keywords:
+  - computer aided cryptography
+  - formal methods
+  - efficient software implementation
+  - permutation networks
+  - Beneš networks
+  - Classic McEliece
+  - Lean
+  - Mathlib
