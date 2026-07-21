@@ -70,16 +70,6 @@ theorem foldRev_succ_zero {α : Type u} (n : Nat)
   · simp_rw [foldRev_succ, foldRev_zero]
   · rw [foldRev_succ, IH, foldRev_succ]
 
-theorem foldRev_eq_fold_of_apply_eq_apply_pred_sub' {α : Type u} (n : Nat)
-    (f g : (i : Nat) → i < n → α → α)
-    (hfg : ∀ i (hi : i < n), f i hi = g ((n - i) - 1) (by omega)) (init : α) :
-    foldRev n f init = fold n g init := by
-  induction n generalizing init with | zero => _ | succ n IH => _
-  · simp_rw [foldRev_zero, fold_zero]
-  · simp_rw [foldRev_succ_zero, fold_succ, hfg 0, Nat.sub_zero, Nat.add_one_sub_one]
-    exact congrArg _ (IH _ _ (fun i hi => (hfg (i + 1) (Nat.succ_lt_succ hi)).trans
-      (funext (fun _ => by simp_rw [Nat.add_sub_add_right]))) _)
-
 theorem foldRev_eq_fold_of_apply_eq_apply_pred_sub {α : Type u} (n : Nat)
     (f g : (i : Nat) → i < n → α → α)
     (hfg : ∀ i j (hi : i < n) (hj : j < n), i + j = n - 1 → f i hi = g j hj) (init : α) :

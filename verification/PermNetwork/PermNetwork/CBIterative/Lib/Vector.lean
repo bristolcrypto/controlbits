@@ -202,4 +202,13 @@ theorem getElem_getElem_flip {a b : Vector ℕ n}
     fun i j hij => by have := congrArg (b[·.val]) hij; grind) <| Fin.mk _ hi
   grind
 
+lemma foldl_zipIdx_eq_fold {γ : Type*} {β : Type*} (L : ℕ) (xs : Vector γ L)
+    (step : β → γ × ℕ → β) (init : β) :
+    xs.zipIdx.foldl step init
+      = Nat.fold L (fun k hk acc => step acc (xs[k]'hk, k)) init := by
+  rw [← Vector.foldl_toList, Nat.fold_eq_finRange_foldl, Vector.toList_zipIdx]
+  have : xs.toList.zipIdx = (List.finRange L).map (fun i => (xs[i.1], i.1)) :=
+    List.ext_getElem (by simp) (by grind)
+  rw [this, List.foldl_map]
+
 end Vector

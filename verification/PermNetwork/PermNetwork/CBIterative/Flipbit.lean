@@ -896,6 +896,12 @@ theorem getElem_inv_condFlipBit {hk : k < n} :
   unfold condFlipBit
   simp_rw [getElem_inv_condFlipBitIndices, inv_one, getElem_one]
 
+@[simp] theorem shuffle_condFlipBit {α : Type*} {m j l : ℕ} (w : Vector α m) (c : Vector Bool l) :
+    w.shuffle (condFlipBit j c) = w.condFlipBitIndices j c := by
+  ext k hk
+  simp_rw [Vector.getElem_condFlipBitIndices, Vector.getElem_shuffle, getElem_condFlipBit]
+  split_ifs <;> rfl
+
 @[simp]
 theorem condFlipBit_inv : (condFlipBit i c : PermOf n)⁻¹ = condFlipBit i c := by
   ext : 1

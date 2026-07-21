@@ -602,27 +602,28 @@ theorem getElem_toControlBits (hi' : i < (2 * n + 1)) :
   · exact getElem_toControlBits_of_lt hi
   · exact getElem_toControlBits_of_ge (le_of_not_gt hi)
 
+lemma condFlipBit_getElem_toControlBits {k : ℕ} (hk : k < 2 * n + 1) :
+    condFlipBit (min k (2 * n - k)) a.toControlBits[k]
+      = if k < n then a.leftPermIth k else a.rightPermIth (2 * n - k) := by
+  by_cases hkn : k < n
+  · rw [if_pos hkn, getElem_toControlBits_of_lt hkn, min_eq_left (by omega), leftPermIth]
+  · rw [if_neg hkn, getElem_toControlBits_of_ge (le_of_not_gt hkn), min_eq_right (by omega),
+      (Nat.sub_sub_right _ (le_of_not_gt hkn)).trans (congrArg (· - k) (Nat.two_mul n).symm),
+      rightPermIth]
+
 end Decomposition
 
 /-- Run a control-bit vector `v` as a network on the vector `a`: fold over the `2 * n + 1` layers,
 applying layer `k`'s control bits `v[k]` as a conditional bit flip (`condFlipBitIndices`) at bit
-position `min k (2 * n - k)` — the schedule `0, 1, …, n, …, 1, 0` that `toControlBits` produces.
-
-This is the interpretation direction for control bits, expected to invert `toControlBits` (running
-the control bits of a permutation reproduces its action). That inversion is believed to hold but is
-not yet proved here — the `condFlipBitIndices`/`toCBLayer` API makes it fiddly — so unlike
-`toControlBits` this definition currently carries no accompanying correctness lemmas. -/
+position `min k (2 * n - k)` — the schedule `0, 1, …, n, …, 1, 0` that `toControlBits` produces. -/
 def ofControlBits {α : Type*} {m : ℕ} (v : Vector (Vector Bool (2 ^ n)) (2 * n + 1))
     (a : Vector α m) : Vector α m :=
   v.zipIdx.foldl (fun a c => a.condFlipBitIndices (min c.2 (2 * n - c.2)) c.1) a
 
-/-- Applying `condFlipBitIndices` to a vector is the same as shuffling it by the corresponding
-`condFlipBit` permutation (compare `shuffle_flipBit`). -/
-theorem shuffle_condFlipBit {α : Type*} {m j l : ℕ} (w : Vector α m) (c : Vector Bool l) :
-    w.shuffle (condFlipBit j c) = w.condFlipBitIndices j c := by
-  ext k hk
-  simp_rw [Vector.getElem_condFlipBitIndices, Vector.getElem_shuffle, getElem_condFlipBit]
-  split_ifs <;> rfl
+/-
+The code below is auto-formalised and is of a lower standard. It serves to prove
+`ofControlBits_toControlBits`.
+-/
 
 /-- A `Vector.zipIdx` left fold rewritten as a `Nat.fold` over the indices: folding a `zipIdx`-ed
 vector with a step that reads the element and its position is the same as folding the index range
@@ -653,7 +654,7 @@ lemma shuffle_list_foldl {α : Type*} {m : ℕ} {γ : Type*} (L : List γ) (g : 
 
 /-- The `p = 1` specialisation of `shuffle_list_foldl`: a fold of shuffles starting from `v` equals
 `v` shuffled by the product of the layer permutations. -/
-lemma shuffle_list_foldl' {α : Type*} {m : ℕ} {γ : Type*} (L : List γ) (g : γ → PermOf m)
+lemma shuffle_list_foldl_one {α : Type*} {m : ℕ} {γ : Type*} (L : List γ) (g : γ → PermOf m)
     (v : Vector α m) :
     L.foldl (fun acc c => acc.shuffle (g c)) v
       = v.shuffle (L.foldl (fun acc c => acc * g c) 1) := by
@@ -670,9 +671,7 @@ lemma fold_body_congr {β : Type*} {N : ℕ} (f g : (i : ℕ) → i < N → β �
 lemma fold_mul_init {M : Type*} [Monoid M] (N : ℕ) (H : ℕ → M) (init : M) :
     Nat.fold N (fun i _ acc => acc * H i) init
       = init * Nat.fold N (fun i _ acc => acc * H i) 1 := by
-  induction N with
-  | zero => simp
-  | succ N IH => rw [Nat.fold_succ, Nat.fold_succ, IH, mul_assoc]
+  induction N <;> grind [Nat.fold_succ]
 
 /-- Peel the first factor `H 0` off a left-multiplying `Nat.fold`. -/
 lemma fold_peel_first {M : Type*} [Monoid M] (N : ℕ) (H : ℕ → M) :
@@ -710,49 +709,20 @@ theorem ofControlBits_toControlBits {α : Type*} (a : PermOf (2 ^ (n + 1)))
     ofControlBits (a.toControlBits) v = v.shuffle a := by
   unfold ofControlBits
   simp only [← shuffle_condFlipBit]
-  rw [← Vector.foldl_toList, shuffle_list_foldl', Vector.foldl_toList,
-    zipIdx_foldl_eq_fold (step := fun acc x kk => acc * condFlipBit (min kk (2 * n - kk)) x)]
+  rw [← Vector.foldl_toList, shuffle_list_foldl_one, Vector.foldl_toList,
+    Vector.foldl_zipIdx_eq_fold]
   congr 1
   conv_rhs => rw [eq_foldl_mul_foldl_succ (a := a)]
-  rw [fold_body_congr
-      (fun k hk acc => acc * condFlipBit (min k (2 * n - k)) a.toControlBits[k])
-      (fun k _ acc => acc * (if k < n then a.leftPermIth k else a.rightPermIth (2 * n - k))) 1
-      (by
-        intro k hk
-        funext acc
-        congr 1
-        by_cases hkn : k < n
-        · rw [if_pos hkn, getElem_toControlBits_of_lt hkn,
-            show min k (2 * n - k) = k from by omega]
-          rfl
-        · rw [if_neg hkn, getElem_toControlBits_of_ge (le_of_not_gt hkn),
-            show min k (2 * n - k) = 2 * n - k from by omega,
-            show n - (k - n) = 2 * n - k from by omega]
-          rfl)]
-  rw [Nat.fold_congr (show 2 * n + 1 = n + (n + 1) from by omega), Nat.fold_add]
-  rw [fold_body_congr
-      (fun i _ acc => acc * (if i < n then a.leftPermIth i else a.rightPermIth (2 * n - i)))
-      (fun i _ acc => acc * a.leftPermIth i) 1
-      (by intro k hk; funext acc; congr 1; rw [if_pos hk])]
-  rw [fold_body_congr
-      (fun i _ acc =>
-        acc * (if n + i < n then a.leftPermIth (n + i) else a.rightPermIth (2 * n - (n + i))))
-      (fun i _ acc => acc * a.rightPermIth (n - i)) _
-      (by
-        intro k hk
-        funext acc
-        congr 1
-        rw [if_neg (by omega), show 2 * n - (n + k) = n - k from by omega])]
-  rw [fold_mul_init]
+  simp only [condFlipBit_getElem_toControlBits]
+  rw [Nat.fold_congr (show 2 * n + 1 = n + (n + 1) from by omega), Nat.fold_add,
+      fold_body_congr _ (fun i _ acc => acc * a.leftPermIth i) 1
+        (fun k hk => by simp only [if_pos hk]),
+      fold_body_congr _ (fun i _ acc => acc * a.rightPermIth (n - i)) _
+        (fun k _ => by funext acc; congr 1; rw [if_neg (by omega),
+          show 2 * n - (n + k) = n - k from by omega]),
+      fold_mul_init]
   congr 1
-  rw [fold_reassoc (fun i => a.rightPermIth (n - i))]
-  apply fold_body_congr
-  intro k hk
-  rw [show n - (n + 1 - 1 - k) = k from by omega]
-
---#eval (1 : PermOf (2^11)).toControlBits (n := 10)
-
---#eval (1 : PermOf (2^12)).toControlBits (n := 11)
---#eval (1 : PermOf (2^13)).toControlBits (n := 12)
+  rw [fold_reassoc]
+  congr; ext; simp [Nat.sub_sub_right, Nat.le_of_lt_succ, *]
 
 end PermOf
