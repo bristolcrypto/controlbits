@@ -103,6 +103,11 @@ def try_get_core_without_simultaneous_multithreading():
 
 
 def check_no_turbo():
+
+  if not path.isdir("/sys/devices/system/cpu/intel_pstate"):
+    print(" === WARNING ===  intel_pstate driver is missing. BIOS P-states might be disabled.")
+    return False
+
   turbo = readfile("/sys/devices/system/cpu/intel_pstate/no_turbo").strip()
   if turbo == "0":
     print(""" === WARNING === Benchmarks run with no_turbo = 0. Expect unreproducible results. 
@@ -116,6 +121,11 @@ def check_no_turbo():
   
 
 def check_underclocking_disabled(core):
+  
+  if not path.isdir(f"/sys/devices/system/cpu/cpu{core}/cpufreq/"):
+      print(f" === WARNING ===  Could not find cpufreq interface for cpu{core}. CPU scaling might be fully disabled in BIOS.")
+      return False
+  
   underclocking = readfile(f"/sys/devices/system/cpu/cpu{core}/cpufreq/scaling_governor").strip()
   if underclocking != "performance":
     print(f""" === WARNING === Benchmarks run with underclocking enabled on core {core}. Expect unreproducible results.
