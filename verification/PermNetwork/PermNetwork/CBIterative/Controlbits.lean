@@ -616,6 +616,140 @@ def ofControlBits {α : Type*} {m : ℕ} (v : Vector (Vector Bool (2 ^ n)) (2 * 
     (a : Vector α m) : Vector α m :=
   v.zipIdx.foldl (fun a c => a.condFlipBitIndices (min c.2 (2 * n - c.2)) c.1) a
 
+/-- Applying `condFlipBitIndices` to a vector is the same as shuffling it by the corresponding
+`condFlipBit` permutation (compare `shuffle_flipBit`). -/
+theorem shuffle_condFlipBit {α : Type*} {m j l : ℕ} (w : Vector α m) (c : Vector Bool l) :
+    w.shuffle (condFlipBit j c) = w.condFlipBitIndices j c := by
+  ext k hk
+  simp_rw [Vector.getElem_condFlipBitIndices, Vector.getElem_shuffle, getElem_condFlipBit]
+  split_ifs <;> rfl
+
+/-- A `Vector.zipIdx` left fold rewritten as a `Nat.fold` over the indices: folding a `zipIdx`-ed
+vector with a step that reads the element and its position is the same as folding the index range
+with the step reading `xs[k]`. -/
+lemma zipIdx_foldl_eq_fold {γ : Type*} {β : Type*} (L : ℕ) (xs : Vector γ L)
+    (step : β → γ → ℕ → β) (init : β) :
+    xs.zipIdx.foldl (fun acc c => step acc c.1 c.2) init
+      = Nat.fold L (fun k hk acc => step acc (xs[k]'hk) k) init := by
+  rw [Nat.fold_eq_finRange_foldl, ← Vector.foldl_toList, Vector.toList_zipIdx]
+  have : xs.toList.zipIdx = (List.finRange L).map (fun i => (xs[i.1], i.1)) := by
+    apply List.ext_getElem
+    · simp
+    · intro j h1 h2
+      simp [List.getElem_zipIdx]
+  rw [this, List.foldl_map]
+
+/-- A left fold whose step shuffles the accumulator by `g c` can be pulled out of the shuffle:
+the whole fold equals `v` shuffled by the product `∏ g c` (with `p` as a running left factor). -/
+lemma shuffle_list_foldl {α : Type*} {m : ℕ} {γ : Type*} (L : List γ) (g : γ → PermOf m)
+    (p : PermOf m) (v : Vector α m) :
+    L.foldl (fun acc c => acc.shuffle (g c)) (v.shuffle p)
+      = v.shuffle (L.foldl (fun acc c => acc * g c) p) := by
+  induction L generalizing p with
+  | nil => rfl
+  | cons c cs IH =>
+    simp only [List.foldl_cons, ← Vector.mul_shuffle]
+    exact IH (p * g c)
+
+/-- The `p = 1` specialisation of `shuffle_list_foldl`: a fold of shuffles starting from `v` equals
+`v` shuffled by the product of the layer permutations. -/
+lemma shuffle_list_foldl' {α : Type*} {m : ℕ} {γ : Type*} (L : List γ) (g : γ → PermOf m)
+    (v : Vector α m) :
+    L.foldl (fun acc c => acc.shuffle (g c)) v
+      = v.shuffle (L.foldl (fun acc c => acc * g c) 1) := by
+  have := shuffle_list_foldl L g 1 v
+  rwa [Vector.one_shuffle] at this
+
+/-- Two `Nat.fold`s with pointwise-equal step functions are equal. -/
+lemma fold_body_congr {β : Type*} {N : ℕ} (f g : (i : ℕ) → i < N → β → β) (init : β)
+    (h : ∀ k (hk : k < N), f k hk = g k hk) :
+    Nat.fold N f init = Nat.fold N g init := by
+  rw [funext fun k => funext fun hk => h k hk]
+
+/-- The initial value of a left-multiplying `Nat.fold` factors out on the left. -/
+lemma fold_mul_init {M : Type*} [Monoid M] (N : ℕ) (H : ℕ → M) (init : M) :
+    Nat.fold N (fun i _ acc => acc * H i) init
+      = init * Nat.fold N (fun i _ acc => acc * H i) 1 := by
+  induction N with
+  | zero => simp
+  | succ N IH => rw [Nat.fold_succ, Nat.fold_succ, IH, mul_assoc]
+
+/-- Peel the first factor `H 0` off a left-multiplying `Nat.fold`. -/
+lemma fold_peel_first {M : Type*} [Monoid M] (N : ℕ) (H : ℕ → M) :
+    Nat.fold (N + 1) (fun i _ acc => acc * H i) 1
+      = H 0 * Nat.fold N (fun i _ acc => acc * H (i + 1)) 1 := by
+  rw [show N + 1 = 1 + N from by omega, Nat.fold_add]
+  simp only [Nat.fold_succ, Nat.fold_zero, one_mul]
+  rw [fold_mul_init]
+  congr 1
+  apply fold_body_congr
+  intro k hk
+  rw [Nat.add_comm 1 k]
+
+/-- Re-association: the left-associated product `H 0 * H 1 * ⋯ * H (N-1)` (a left-multiplying fold)
+equals the right-associated product of the same terms in the same order (a right-multiplying fold
+with reversed index). No commutativity is used. -/
+lemma fold_reassoc {M : Type*} [Monoid M] (H : ℕ → M) (N : ℕ) :
+    Nat.fold N (fun i _ acc => acc * H i) 1
+      = Nat.fold N (fun k _ r => H (N - 1 - k) * r) 1 := by
+  induction N generalizing H with
+  | zero => simp
+  | succ N IH =>
+    rw [fold_peel_first, Nat.fold_succ, show (N + 1) - 1 - N = 0 from by omega]
+    congr 1
+    rw [IH (fun j => H (j + 1))]
+    apply fold_body_congr
+    intro k hk
+    rw [show N - 1 - k + 1 = N + 1 - 1 - k from by omega]
+
+/-- Running the control bits of `a` as a network reproduces the action of `a`: `ofControlBits`
+inverts `toControlBits`. Reduces to `eq_foldl_mul_foldl_succ` once the fold is turned into the
+product of the layer permutations. -/
+theorem ofControlBits_toControlBits {α : Type*} (a : PermOf (2 ^ (n + 1)))
+    (v : Vector α (2 ^ (n + 1))) :
+    ofControlBits (a.toControlBits) v = v.shuffle a := by
+  unfold ofControlBits
+  simp only [← shuffle_condFlipBit]
+  rw [← Vector.foldl_toList, shuffle_list_foldl', Vector.foldl_toList,
+    zipIdx_foldl_eq_fold (step := fun acc x kk => acc * condFlipBit (min kk (2 * n - kk)) x)]
+  congr 1
+  conv_rhs => rw [eq_foldl_mul_foldl_succ (a := a)]
+  rw [fold_body_congr
+      (fun k hk acc => acc * condFlipBit (min k (2 * n - k)) a.toControlBits[k])
+      (fun k _ acc => acc * (if k < n then a.leftPermIth k else a.rightPermIth (2 * n - k))) 1
+      (by
+        intro k hk
+        funext acc
+        congr 1
+        by_cases hkn : k < n
+        · rw [if_pos hkn, getElem_toControlBits_of_lt hkn,
+            show min k (2 * n - k) = k from by omega]
+          rfl
+        · rw [if_neg hkn, getElem_toControlBits_of_ge (le_of_not_gt hkn),
+            show min k (2 * n - k) = 2 * n - k from by omega,
+            show n - (k - n) = 2 * n - k from by omega]
+          rfl)]
+  rw [Nat.fold_congr (show 2 * n + 1 = n + (n + 1) from by omega), Nat.fold_add]
+  rw [fold_body_congr
+      (fun i _ acc => acc * (if i < n then a.leftPermIth i else a.rightPermIth (2 * n - i)))
+      (fun i _ acc => acc * a.leftPermIth i) 1
+      (by intro k hk; funext acc; congr 1; rw [if_pos hk])]
+  rw [fold_body_congr
+      (fun i _ acc =>
+        acc * (if n + i < n then a.leftPermIth (n + i) else a.rightPermIth (2 * n - (n + i))))
+      (fun i _ acc => acc * a.rightPermIth (n - i)) _
+      (by
+        intro k hk
+        funext acc
+        congr 1
+        rw [if_neg (by omega), show 2 * n - (n + k) = n - k from by omega])]
+  rw [fold_mul_init]
+  congr 1
+  rw [fold_reassoc (fun i => a.rightPermIth (n - i))]
+  apply fold_body_congr
+  intro k hk
+  rw [show n - (n + 1 - 1 - k) = k from by omega]
+
 --#eval (1 : PermOf (2^11)).toControlBits (n := 10)
 
 --#eval (1 : PermOf (2^12)).toControlBits (n := 11)
