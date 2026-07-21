@@ -36,6 +36,9 @@ prove short lemmas as much as possible rather than large monolithic theorems, bu
 so-called "proof API" around our core definitions. This aids readability, re-use, and automation
 (and is just generally a desirable practice).
 
+Some of the documentation here is AI-authored, but the vast majority of the actual statements and proofs are written by hand.
+Where proofs are AI-authored, this has been noted inline.
+
 ## ./implementation
 This contains all materials relevent to the Section 5: "Implementation and evaluation". The subdirectory
 `src` contains the source code, `benchmarks` contains Python scripts that reproduce Tables 1 and 2. `docs`
