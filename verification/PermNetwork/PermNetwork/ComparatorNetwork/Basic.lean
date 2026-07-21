@@ -3,6 +3,24 @@ import Mathlib.Data.Fin.Tuple.Sort
 
 set_option linter.style.header false
 
+/-!
+# Comparator networks
+
+An early model of comparator (sorting) networks and how they behave under permutation of channels.
+
+A `Comparator n` is an ordered pair of channels `(i, j)`; acting on a tuple `f` it sorts those two
+entries (`cSwap`), and `cSwapPerm` records the induced transposition. A `ComparatorNetwork n` is
+a list of comparators, run left to right by `cSwaps`, with `cSwapsPerm` accumulating the overall
+permutation it applies to a given input (so `f.permOn (f.cSwapsPerm l) = f.cSwaps l`).
+
+The headline result is `permOn_cSwaps_map_of_monotone_cSwaps`: if a network `l` sorts every input,
+then relabelling its channels by `π` gives a network that no longer sorts, but does sort *up to `π`*
+— feeding `f` into the relabelled network and permuting the output by `π` reproduces `f.cSwaps l`.
+
+Also here are supporting `permOn` lemmas (acting on a tuple by a permutation of its indices) and
+`List.count`/`countP` facts used to reason about multiset-preservation of the swaps.
+-/
+
 instance [IsEmpty α] (p : α → Prop) : DecidablePred p := (.isFalse <| fun _ => isEmptyElim ·)
 
 namespace Fin
@@ -41,6 +59,7 @@ namespace Prod
 
 end Prod
 
+/-- A tuple of `n` values in `α`, i.e. the data on the `n` channels of a network. -/
 abbrev Tuple (α : Sort u) (n : ℕ) := Fin n → α
 
 namespace Tuple
@@ -49,6 +68,7 @@ open Equiv
 
 section PermOn
 
+/-- Permute the channels of a tuple by `π`: `f.permOn π k = f (π k)`. -/
 @[specialize] def permOn (f : Tuple α n) (π : Perm (Fin n)) : Tuple α n := (f <| π ·)
 
 @[grind =]
@@ -117,10 +137,13 @@ theorem monotone_permOn_sort [LinearOrder α] {f : Tuple α n} :
 
 end PermOn
 
+/-- A comparator: the ordered pair of channels `(i, j)` it compares. -/
 abbrev Comparator (n : ℕ) := Fin n × Fin n
 
 section CSwap
 
+/-- Apply one comparator `(i, j)` to `f`: put the smaller of `f i, f j` on channel `i` and the
+larger on channel `j`, leaving all other channels alone. -/
 @[specialize] def cSwap [LinearOrder α] (f : Tuple α n) (ij : Comparator n) : Tuple α n :=
   fun k => if k = ij.1 then min (f ij.1) (f ij.2) else
   if k = ij.2 then max (f ij.1) (f ij.2) else f k
@@ -180,6 +203,9 @@ end CSwap
 
 section CSwapPerm
 
+/-- The permutation induced by applying comparator `ij` to `f`: the identity if the entries are
+already in order, otherwise the transposition `swap ij.1 ij.2`. Satisfies
+`f.permOn (f.cSwapPerm ij) = f.cSwap ij`. -/
 @[specialize] def cSwapPerm [LinearOrder α] (f : Tuple α n) (ij : Comparator n) : Perm (Fin n) :=
   if f ij.1 ≤ f ij.2 then 1 else Equiv.swap ij.1 ij.2
 
@@ -232,12 +258,14 @@ theorem ofFn_cSwap_perm_self {f : Tuple α n} {ij : Comparator n} :
 
 end CSwapPerm
 
+/-- A comparator network on `n` channels: a list of comparators, applied left to right. -/
 abbrev ComparatorNetwork (n : ℕ) := List (Comparator n)
 
 section CSwaps
 
 variable [LinearOrder α]
 
+/-- Run a whole comparator network on `f`: fold `cSwap` over the list of comparators. -/
 @[specialize] def cSwaps (f : Tuple α n) (l : ComparatorNetwork n) : Tuple α n := l.foldl cSwap f
 
 @[simp, grind =]
@@ -272,6 +300,9 @@ theorem cSwaps_map_map_perm_perm {f : Tuple α n} {π : Perm (Fin n)} {l : Compa
 
 section CSwapsPerm
 
+/-- The overall permutation the network `l` applies to the input `f`: the product of the per-step
+transpositions `cSwapPerm`, accumulated while running the network. Satisfies
+`f.permOn (f.cSwapsPerm l) = f.cSwaps l`. -/
 @[specialize] def cSwapsPerm (f : Tuple α n) (l : ComparatorNetwork n) :
     Perm (Fin n) := (l.foldl (fun fπ ij => (fπ.1.cSwap ij,
     fπ.2 * fπ.1.cSwapPerm ij)) (f, 1)) |>.2
@@ -325,6 +356,9 @@ theorem cSwaps_permOn_eq_cSwaps_of_monotone_cSwaps {f : Tuple α n} {π : Perm (
     ofFn_permOn_perm_ofFn.trans ofFn_cSwaps_perm_self.symm).eq_of_pairwise
     (fun _ _ _ _ => le_antisymm) ?_ ?_ <;> grind [List.pairwise_ofFn, monotone_iff_forall_lt]
 
+/-- Permuting the channels of a sorting network yields one that sorts up to permutation. If `l`
+sorts every input, then running `f` through the channel-relabelled network `l.map (π × π)` and
+permuting the output by `π` reproduces the sorted `f.cSwaps l`. -/
 theorem permOn_cSwaps_map_of_monotone_cSwaps {f : Tuple α n} {π : Perm (Fin n)}
     {l : ComparatorNetwork n} (hl : ∀ f : Tuple α n, Monotone (f.cSwaps l)) :
     (f.cSwaps (l.map <| Prod.map π π)).permOn π = f.cSwaps l := by grind

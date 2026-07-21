@@ -1,6 +1,16 @@
 import Mathlib.GroupTheory.Commutator.Basic
 import Mathlib.Algebra.CharZero.Defs
 
+/-!
+# Permutations of `Fin 2`
+
+There are only two permutations of `Fin 2`, so every one is either the identity or the swap. This
+file records that classification (`perm_fin_two`) and its immediate consequences: such permutations
+are involutions, are determined by where they send `0` or `1`, and — because the group is abelian —
+every commutator of them is trivial (`cmtr_fin_two`). The last fact is the base case of the
+control-bit recursion.
+-/
+
 namespace Fin
 
 lemma perm_fin_two (π : Equiv.Perm (Fin 2)) :

@@ -1,10 +1,20 @@
 import PermNetwork.CBIterative.Lib.Nat
 import Mathlib.Data.Fintype.EquivFin
 
+/-!
+# Numbers agreeing on their low bits
+
+`bitMatchUnder i x` is the set of numbers below `2 ^ n` that agree with `x` on the low `i` bits.
+There are exactly `2 ^ (n - i)` of them (`card_bitMatchUnder`), witnessed by the explicit
+equivalence `equivBitMatchUnder` with `Fin (2 ^ (n - i))`. These "bit-matching" classes index the
+sub-blocks on which one layer of the control-bit network acts.
+-/
+
 namespace Finset
 
 open Nat
 
+/-- The numbers below `2 ^ n` whose low `i` bits agree with those of `x`. -/
 def bitMatchUnder {n : ℕ} (i : ℕ) (x : Fin (2 ^ n)) :=
   (Finset.range (2 ^ n)).filter (fun y => ∀ k < i, y.testBit k = (x : ℕ).testBit k)
 
@@ -18,6 +28,8 @@ theorem mem_bitMatchUnder_iff {q : ℕ} :
   unfold bitMatchUnder
   simp_rw [Finset.mem_filter, Finset.mem_range]
 
+/-- `bitMatchUnder i x` is in bijection with `Fin (2 ^ (n - i))`: an element is determined by the
+`n - i` bits above position `i`, since the low `i` bits are fixed to match `x`. -/
 def equivBitMatchUnder {n i : ℕ} {x : Fin (2 ^ n)} :
     bitMatchUnder i x ≃ Fin (2 ^ (n - i)) where
   toFun a := ⟨(a.1 / 2 ^ i) % 2 ^ (n - i), mod_lt _ (Nat.two_pow_pos _)⟩

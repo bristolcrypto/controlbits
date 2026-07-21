@@ -3,6 +3,20 @@ import Mathlib.Algebra.Group.Action.Basic
 import Mathlib.Algebra.Group.MinimalAxioms
 import Mathlib.Data.Finite.Prod
 
+/-!
+# `PermOf n`: a computable permutation type
+
+`PermOf n` is a permutation of `{0, …, n-1}` stored as a value vector together with its inverse
+vector — a performance-oriented alternative to `Equiv.Perm (Fin n)` that supports array-speed
+application and swaps.
+
+This file provides the core structure and its group life: indexing (`GetElem`), the group operations
+(`One`, `Mul`, `Inv`, `Group`) and their action on `ℕ` and on vectors (`MulAction`, `shuffle`), and
+the constructors `ofFn`, `swap`, and conversions to and from duplicate-free vectors
+(`Vector.toPermOf`, `permOfEquivForallLtMem`). The subsequent `PermOf` files build the bit-level
+operations on top of this.
+-/
+
 /--
 A `PermOf n` is a permutation on `n` elements represented by two vectors, which we can
 think of as an array of values and a corresponding array of indexes which are inverse to
@@ -291,6 +305,8 @@ theorem smul_eq_id_iff_eq_one : ((a • ·) : ℕ → ℕ) = id ↔ a = 1 := by
 
 end SMul
 
+/-- Build a `PermOf n` from a value function `f` and its inverse `g`, given that `f` lands in range
+and `g` undoes `f`. -/
 def ofFn (f g : Fin n → ℕ) (hf : ∀ i, f i < n) (hfg : ∀ i, g ⟨f i, hf _⟩ = i) : PermOf n :=
   PermOf.mk (Vector.ofFn f) (Vector.ofFn g) (by grind)
 
@@ -418,6 +434,8 @@ open PermOf
 
 namespace Nodup
 
+/-- View a duplicate-free vector of in-range values as a `PermOf n`, taking the vector as the value
+array and recovering the inverse by index-of lookups. -/
 def toPermOf {a : Vector ℕ n} (ha₁ : a.Nodup := by decide)
     (ha₂ : ∀ x (h : x < n), a[x] < n := by decide) : PermOf n :=
   ⟨a, (Vector.range n).map a.toList.idxOf, by have H := ha₁.nodup_toList.idxOf_getElem; grind⟩
@@ -439,6 +457,8 @@ end ToPermOf
 
 end Nodup
 
+/-- `PermOf n` is equivalent to the duplicate-free, in-range value vectors: the data of a
+permutation is exactly its value array. -/
 def permOfEquivNodupGetElemLt : PermOf n ≃
     Subtype (α := Vector ℕ n) (fun a => a.Nodup ∧ ∀ x (h : x < n), a[x] < n) where
   toFun a := ⟨a.toVector, nodup_toVector, by grind⟩
@@ -446,6 +466,8 @@ def permOfEquivNodupGetElemLt : PermOf n ≃
   left_inv _ := Nodup.toPermOf_toVector
   right_inv _ := Subtype.ext rfl
 
+/-- View a vector containing every value `< n` as a `PermOf n`. Surjectivity of its values on
+`{0, …, n-1}` already forces it to be a permutation, so no `Nodup` hypothesis is needed. -/
 def toPermOf (a : Vector ℕ n) (ha : ∀ x < n, x ∈ a := by decide) : PermOf n :=
   ⟨(Vector.range n).map a.toList.idxOf, a, fun {i hi} => by
     have H : List.idxOf i a.toList < a.toList.length := by grind [Vector.mem_toArray_iff]
@@ -465,12 +487,15 @@ theorem getElem_toPermOf {a : Vector ℕ n} {ha : ∀ x < n, x ∈ a} {i : ℕ} 
 
 end ToPermOf
 
+/-- `PermOf n` is equivalent to the value vectors containing every element `< n`. -/
 def permOfEquivForallLtMem : PermOf n ≃ Subtype (α := Vector ℕ n) (∀ x < n, x ∈ ·) where
   toFun a := ⟨a.toVector, mem_toVector_of_lt⟩
   invFun a := toPermOf a.1 a.2
   left_inv _ := toPermOf_toVector
   right_inv _ := Subtype.ext rfl
 
+/-- Permute the entries of a vector by `a`: `(v.shuffle a)[i] = v[a[i]]`. This is the (opposite)
+action of `PermOf n` on `Vector α n`. -/
 def shuffle {α : Type*} (a : PermOf n) (v : Vector α n) : Vector α n :=
   Vector.ofFn (fun i => v[a[i.1]])
 

@@ -2,6 +2,22 @@ import PermNetwork.CBIterative.PermOf.Basic
 import PermNetwork.CBIterative.Lib.MulAction
 import PermNetwork.CBIterative.Lib.Vector
 
+/-!
+# Cycles and cycle minima of a `PermOf n`
+
+Since `PermOf n` acts on `ℕ` (fixing everything `≥ n`), every point has a finite orbit. This file
+develops that orbit structure and the vectorised computation of cycle minima that the control-bit
+algorithm needs.
+
+* `cycleOf a x` is the cycle (as a `Finset`) of `a` through `x`.
+* `CycleMinVector a i` records, for every index at once, the least value seen among the first
+  `2 ^ i` iterates — computed by `CycleMinVectorAux` with a doubling recursion (square the
+  permutation and take a pointwise `min` with the shuffled vector at each step), the `PermOf`
+  analogue of `FastCycleMin`. `CycleMin a i x` reads off a single entry.
+
+Once `2 ^ i` reaches the period, `CycleMinVector` holds the true minimum of each cycle.
+-/
+
 namespace PermOf
 
 variable {n : ℕ}
@@ -88,6 +104,8 @@ theorem exists_pos_le_pow_getElem_eq (a : PermOf n) {i : ℕ} (hi : i < n) :
 
 end MulActionNat
 
+/-- The cycle of `a` through `x`, as a `Finset`: the set of iterates `(a ^ k)[x]` (just `{x}` when
+`x` is out of range and hence fixed). -/
 def cycleOf (a : PermOf n) (x : ℕ) : Finset ℕ :=
   if h : x < n then (Finset.range n).image (fun k => (a ^ k)[x]) else {x}
 
@@ -201,6 +219,10 @@ theorem getElem_inv_zpow_mem_cycleOf (a : PermOf n) {x : ℕ} (hx : x < n) (k : 
   simp only [inv_zpow']
   exact a.getElem_zpow_mem_cycleOf hx (-k)
 
+/-- Doubling recursion behind `CycleMinVector`: step `i` returns `a ^ (2^i)` together with the
+vector whose `x`-th entry is the least of the first `2 ^ i` iterates of `x`. Each step squares the
+permutation and takes a pointwise `min` of the current vector with its shuffle by the squared
+permutation. -/
 def CycleMinVectorAux (a : PermOf n) : ℕ → PermOf n × Vector ℕ n
   | 0 => ⟨1, Vector.range n⟩
   | 1 =>
@@ -222,6 +244,8 @@ theorem cycleMinAux_succ_fst (a : PermOf n) (i : ℕ) :
   · rw [pow_succ, pow_mul]
     exact IH ▸ rfl
 
+/-- For every index at once, the least value among the first `2 ^ i` iterates under `a`. Once
+`2 ^ i` bounds the cycle lengths this is the minimum of each cycle. -/
 def CycleMinVector (a : PermOf n) (i : ℕ) : Vector ℕ n := (a.CycleMinVectorAux i).2
 
 @[simp]
@@ -366,6 +390,8 @@ lemma cycleMinVector_eq_apply_cycleMinVector (a : PermOf n) (i : ℕ) {x : ℕ}
       ⟨hy.choose - 1, zpow_sub_one a _ ▸ getElem_mul _ ▸
       inv_mul_cancel_right _ a ▸ hy.choose_spec⟩]
 
+/-- The single entry `(CycleMinVector a i)[x]`: the least of the first `2 ^ i` iterates of `x`
+(defaulting to `x` itself when out of range). -/
 def CycleMin (a : PermOf n) (i : ℕ) (x : ℕ) : ℕ := (a.CycleMinVector i)[x]?.getD x
 
 theorem getElem_cycleMinVector (a : PermOf n) (i : ℕ) {x : ℕ}

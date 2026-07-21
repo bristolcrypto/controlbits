@@ -1,12 +1,35 @@
 import PermNetwork.CBIterative.PermOf.BitInvariant
 import PermNetwork.CBIterative.RemoveInsert
 
+/-!
+# Flipping bits, conditionally, at three levels
+
+This file develops the bit-flip operations the iterative construction runs on, at three matching
+levels of abstraction:
+
+* **On `ℕ`** (`namespace Nat`): `flipBit q i` toggles bit `i` of `q`; `condFlipBit q i c` toggles it
+  only when the control vector `c`, indexed by `q` with bit `i` removed, says so. `flipBitPerm` and
+  `condFlipBitPerm` package these as involutive permutations of `ℕ`.
+* **On `Vector`** (`namespace Vector`): the same operations applied either to the *indices* of a
+  vector (`…Indices`, permuting entries by position) or to its stored numeric *values*
+  (`…Vals`), including the unconditional `flipBit…` special cases.
+* **On `PermOf`** (`namespace PermOf`): `flipBitIndices`/`flipBitVals` pre- or post-compose a
+  permutation with a bit flip, `flipBit i` is the flip on its own, and the conditional versions
+  mirror them. Finally `flipBitCommutator a i = a.flipBitIndices i * a⁻¹.flipBitIndices i` is the
+  iterative analogue of the recursive `XBackXForth` commutator `⁅a, flipBit i⁆`; its cycle minima
+  drive the control-bit layers.
+
+Throughout, the arithmetic acts on all of `ℕ` but is guarded so that a flip which would leave the
+range `[0, n)` is suppressed, keeping every operation a genuine permutation of `n` elements.
+-/
+
 namespace Nat
 
 section FlipBit
 
 variable {p q b i j k n m : ℕ} {b : Bool}
 
+/-- Toggle bit `i` of `q`, i.e. `q ^^^ (1 <<< i)`. -/
 def flipBit (q i : ℕ) := q ^^^ 1 <<< i
 
 @[grind =]
@@ -297,6 +320,7 @@ theorem flipBit_lt_flipBit_of_lt_of_ne_flipBit_of_lt_testBit_eq {r : ℕ} (hrq :
   rw [← not_le]
   exact fun H => hrq' (eq_flipBit_of_lt_of_flipBit_ge_of_lt_testBit_eq hrq H h)
 
+/-- Flipping bit `i` as an (involutive) permutation of `ℕ`. -/
 @[pp_nodot, simps!]
 def flipBitPerm (i : ℕ) : Equiv.Perm ℕ :=
   ⟨(flipBit · i), (flipBit · i),
@@ -309,6 +333,8 @@ end FlipBit
 
 section CondFlipBit
 
+/-- Toggle bit `i` of `q`, only when the control bit `c[q.removeBit i]` is `true` (and in range);
+otherwise return `q`. The control is looked up by `q` with bit `i` deleted. -/
 def condFlipBit (q : ℕ) (i : ℕ) {l : ℕ} (c : Vector Bool l) : ℕ :=
   q ^^^ ((c[q.removeBit i]?.getD false).toNat <<< i)
 
@@ -403,6 +429,7 @@ theorem condFlipBit_lt_two_pow_iff_lt_two_pow (h : i < m) :
     q.condFlipBit i c < 2 ^ m ↔ q < 2 ^ m := by
   rw [condFlipBit_lt_iff_lt (pow_dvd_pow _ h)]
 
+/-- Conditionally flipping bit `i` (controlled by `c`) as an involutive permutation of `ℕ`. -/
 @[pp_nodot, simps!]
 def condFlipBitPerm (i : ℕ) (c : Vector Bool l) : Equiv.Perm ℕ where
   toFun := (condFlipBit · i c)
@@ -428,6 +455,9 @@ section CondFlipBit
 
 variable {α : Type*} {n i l : ℕ} {c : Vector Bool l}
 
+/-- Permute the *positions* of `v` by conditionally flipping bit `i`: for each control, the pair
+of positions differing only in bit `i` is swapped when the control bit is set. Entries whose swapped
+position falls outside `[0, n)` stay put. -/
 def condFlipBitIndices (v : Vector α n) (i : ℕ) (c : Vector Bool l) :
     Vector α n :=
   c.foldl (fun vn b => (vn.1.bswapIfInBounds b (vn.2.insertBit false i)
@@ -479,6 +509,8 @@ theorem getElem_condFlipBitIndices {v : Vector α n} {c : Vector Bool l}
 @[simp] theorem condFlipBitIndices_condFlipBitIndices {v : Vector α n} :
     (v.condFlipBitIndices i c).condFlipBitIndices i c = v := by grind
 
+/-- Apply the conditional bit-`i` flip to the *values* stored in `v` (a numeric vector), leaving any
+value whose flip would leave `[0, n)` unchanged. -/
 def condFlipBitVals (v : Vector ℕ n) (i : ℕ) (c : Vector Bool l) : Vector ℕ n :=
   v.map (fun k => if k.condFlipBit i c < n then k.condFlipBit i c else k)
 
@@ -497,6 +529,8 @@ section FlipBit
 
 variable {α : Type*} {n i : ℕ}
 
+/-- Permute the positions of `v` by the unconditional bit-`i` flip: the `condFlipBitIndices` case
+where every control bit is `true`. -/
 def flipBitIndices (v : Vector α n) (i : ℕ) : Vector α n :=
     v.condFlipBitIndices i (replicate (n.removeBit i) true)
 
@@ -512,6 +546,8 @@ theorem getElem_flipBitIndices {v : Vector α n} {i k : ℕ} (hk : k < n) :
     ite_eq_left_iff, dite_eq_right_iff]
   exact fun C h => (C h).elim
 
+/-- Apply the unconditional bit-`i` flip to the numeric values of `v`, leaving out-of-range flips
+untouched. -/
 def flipBitVals (v : Vector ℕ n) (i : ℕ) : Vector ℕ n := v.map
   (fun k => if k.flipBit i < n then k.flipBit i else k)
 
@@ -540,11 +576,13 @@ section FlipBit
 
 variable {n : ℕ}
 
+/-- Compose `a` with the bit-`i` flip on the index side (flip, then apply `a`). -/
 def flipBitIndices (a : PermOf n) (i : ℕ) : PermOf n where
   toVector := a.toVector.flipBitIndices i
   invVector := a.invVector.flipBitVals i
   getElem_invVector_getElem_toVector := by grind
 
+/-- Compose `a` with the bit-`i` flip on the value side (apply `a`, then flip). -/
 def flipBitVals (a : PermOf n) (i : ℕ) : PermOf n := (a⁻¹.flipBitIndices i)⁻¹
 
 variable {a b : PermOf n} {i k : ℕ}
@@ -566,6 +604,7 @@ theorem getElem_inv_flipBitVals {hk : k < n} :
     if hk : k.flipBit i < n then a⁻¹[k.flipBit i] else a⁻¹[k] :=
   Vector.getElem_flipBitIndices _
 
+/-- The bit-`i` flip as a `PermOf n` in its own right. -/
 def flipBit (i : ℕ) : PermOf n := (1 : PermOf n).flipBitIndices i
 
 theorem getElem_flipBit {hk : k < n} :
@@ -797,11 +836,13 @@ section CondFlipBit
 
 variable {n l i j : ℕ}
 
+/-- Compose `a` with the conditional bit-`i` flip (controlled by `c`) on the index side. -/
 def condFlipBitIndices (a : PermOf n) (i : ℕ) (c : Vector Bool l) : PermOf n where
   toVector := a.toVector.condFlipBitIndices i c
   invVector := a.invVector.condFlipBitVals i c
   getElem_invVector_getElem_toVector := by grind
 
+/-- Compose `a` with the conditional bit-`i` flip (controlled by `c`) on the value side. -/
 def condFlipBitVals (a : PermOf n) (i : ℕ) (c : Vector Bool l) : PermOf n :=
   (a⁻¹.condFlipBitIndices i c)⁻¹
 
@@ -835,6 +876,8 @@ Vector.getElem_condFlipBitIndices _
 @[simp] theorem condFlipBitVals_of_replicate_false :
     (a.condFlipBitVals i (Vector.replicate l false)) = a := by grind
 
+/-- The conditional bit-`i` flip (controlled by `c`) as a `PermOf n` in its own right; the basic
+layer of the iterative control-bit network. -/
 def condFlipBit (i : ℕ) (c : Vector Bool l) : PermOf n :=
   (1 : PermOf n).condFlipBitIndices i c
 
@@ -1000,6 +1043,9 @@ section FlipBitCommutator
 
 variable {n p : ℕ}
 
+/-- The iterative analogue of `XBackXForth`: `a.flipBitIndices i * a⁻¹.flipBitIndices i`, which
+equals the commutator `⁅a, flipBit i⁆` (also `a.flipBitIndices i * (a.flipBitVals i)⁻¹`). Its cycle
+minima determine the control-bit layer at position `i`. -/
 def flipBitCommutator (a : PermOf n) (i : ℕ) : PermOf n :=
   (a.flipBitIndices i) * (a⁻¹.flipBitIndices i)
 

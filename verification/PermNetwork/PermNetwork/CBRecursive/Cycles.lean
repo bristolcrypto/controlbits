@@ -1,6 +1,22 @@
 import Mathlib.Data.Fintype.Order
 import Mathlib.GroupTheory.Perm.Cycle.Basic
 
+/-!
+# Cycle minima of a permutation
+
+The control bits of a permutation are read off from the minimum element of each of its cycles. This
+file develops two notions of that minimum and relates them:
+
+* `CycleMin π x` — the genuine infimum of the whole cycle through `x`, the mathematically clean
+  object;
+* `FastCycleMin i π x` — the minimum of the `2 ^ i` iterates `x, π x, …, π ^ (2^i - 1) x`, computed
+  by a `log`-depth doubling recursion, the object one can actually evaluate.
+
+The bridge `fastCycleMin_eq_cycleMin_of_zpow_apply_mem_finset`: once `i` is large enough that
+`2 ^ i` bounds the cycle length, the two coincide. Everything is developed at the right level of
+order-completeness, with the `⊥ ↦ ⊥` and `0 ↦ 0` specialisations that the algorithm needs.
+-/
+
 namespace Equiv.Perm
 
 variable {α : Type*}
@@ -28,6 +44,10 @@ theorem SameCycle.exists_pow_lt_finset_card_of_apply_zpow_mem {f : Perm α} (s :
     exact (Nat.cast_le.mpr hj).trans (le_add_of_nonneg_right (Nat.cast_nonneg _))
   exact ⟨(k % (↑j - ↑i)).natAbs, hks, hkf⟩
 
+/-- The minimum of the `2 ^ i` iterates `x, π x, …, (π ^ (2^i - 1)) x`, computed by a doubling
+recursion: the min over `2 ^ (i+1)` iterates is the min of the first and second halves, and the
+second half is the first half started from `(π ^ 2^i) x`. It runs in `i` steps, not `2 ^ i`.
+-/
 def FastCycleMin {α : Type*} [Min α] (i : ℕ) (π : Equiv.Perm α) (x : α) : α :=
   match i with
   | 0 => x
@@ -164,6 +184,7 @@ variable {α : Type*} {π : Perm α} {x y : α}
 
 lemma sameCycle_nonempty (π : Perm α) : Set.Nonempty {y | π.SameCycle x y} := ⟨x, ⟨0, rfl⟩⟩
 
+/-- The infimum of the cycle of `π` through `x`, i.e. the least element among all `(π ^ k) x`. -/
 def CycleMin [InfSet α] (π : Equiv.Perm α) (x : α) : α := sInf {y | π.SameCycle x y}
 
 section InfSet

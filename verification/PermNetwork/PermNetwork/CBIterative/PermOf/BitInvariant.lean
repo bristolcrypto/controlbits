@@ -1,6 +1,18 @@
 import PermNetwork.CBIterative.PermOf.Basic
 import PermNetwork.CBIterative.Lib.Nat
 
+/-!
+# Bit-invariant permutations
+
+`a.BitInvariant i` says the `PermOf` `a` never changes bit `i` of any index it acts on. This is the
+iterative counterpart of `bitInvar` from the recursive development.
+
+The API shows `BitInvariant i` is closed under inverse, product and (z)powers, is automatic once
+`n ≤ 2 ^ i` (there are no such high bits to change), and — crucially — that being invariant on *all*
+bits below `i` (with `2 ^ i ≤ n`) forces `a = 1`. That last fact is the termination signal of the
+iterative decomposition: once every low bit is fixed, nothing is left to do.
+-/
+
 namespace PermOf
 
 section BitInvariant
@@ -13,6 +25,8 @@ theorem getElem_testBit_of_ge (a : PermOf n) {k : ℕ} (h : n ≤ 2 ^ k) {i : �
 
 open Nat
 
+/-- `a` is bit-invariant at `i`: acting by `a` leaves bit `i` of every index unchanged (equivalently
+`a[x].testBit i = x.testBit i` for all `x < n`). -/
 def BitInvariant (i : ℕ) (a : PermOf n) : Prop :=
   a.toVector.map (testBit · i) = (Vector.range n).map (testBit · i)
 

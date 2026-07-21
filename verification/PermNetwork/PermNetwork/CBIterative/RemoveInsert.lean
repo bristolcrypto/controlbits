@@ -1,6 +1,21 @@
 import PermNetwork.CBIterative.Lib.Finset
 import PermNetwork.CBIterative.PermOf.MulAction
 
+/-!
+# Inserting and removing a bit
+
+The iterative construction repeatedly moves between a number and the same number with one bit
+position inserted or deleted. This file provides those operations and packages them as equivalences.
+
+* On `ℕ`: `removeBit q i` deletes bit `i`, closing the gap; `insertBit b p i` inserts bit `b` at
+  position `i`, shifting the higher bits up. They are mutually inverse, and `insertBitEquiv i`
+  bundles this as `Bool × ℕ ≃ ℕ` (the inserted bit together with the rest).
+* On `BitVec`: `insertLsb`/`removeLsb` are the length-changing (`w ↔ w+1`) versions,
+  with `insertLsbEquiv i : Bool × BitVec w ≃ BitVec (w + 1)`.
+
+The `testBit`/`getElem` lemmas describe exactly how bits below, at, and above position `i` move.
+-/
+
 namespace Nat
 
 instance : GetElem Nat Nat Bool fun _ _ => True where
@@ -87,6 +102,8 @@ section InsertBitEquiv
 
 open Equiv
 
+/-- Inserting a bit at position `i` as an equivalence `Bool × ℕ ≃ ℕ`: a number splits uniquely into
+its bit `i` and the number with that bit removed. -/
 @[pp_nodot, simps! symm_apply apply]
 def insertBitEquiv (i : ℕ) : Bool × ℕ ≃ ℕ where
   toFun bp := bp.2.insertBit bp.1 i
@@ -486,6 +503,7 @@ namespace BitVec
 
 variable {w} {b : Bool} {q : BitVec (w + 1)} {p : BitVec w} {i : Fin (w + 1)}
 
+/-- Insert bit `b` at position `i` of a bit vector, lengthening it from `w` to `w + 1`. -/
 @[simps!]
 def insertLsb (b : Bool) (p : BitVec w) (i : Fin (w + 1)) : BitVec (w + 1) :=
   BitVec.ofNatLT (p.toNat.insertBit b i) <|
@@ -514,6 +532,7 @@ theorem getElem?_insertLsb {j : ℕ} :
     (p.insertLsb b i)[j]? = if hij : i < j then p[j - 1]? else if hij : j < i then p[j] else b := by
   grind
 
+/-- Remove bit `i` from a bit vector, shortening it from `w + 1` to `w`. Inverse to `insertLsb`. -/
 @[simps!]
 def removeLsb (q : BitVec (w + 1)) (i : Fin (w + 1)) : BitVec w :=
   BitVec.ofNatLT (q.toNat.removeBit i) <|
@@ -549,6 +568,8 @@ theorem insertLsb_getElem_val_removeLsb_of_eq : (q.removeLsb i).insertLsb q[i.va
 theorem removeLsb_insertLsb_of_eq : (p.insertLsb b i).removeLsb i = p :=
   eq_of_toNat_eq Nat.removeBit_insertBit_of_eq
 
+/-- Inserting a bit at position `i` as an equivalence `Bool × BitVec w ≃ BitVec (w + 1)`: the
+`BitVec` counterpart of `insertBitEquiv`. -/
 @[simps! apply symm_apply]
 def insertLsbEquiv (i : Fin (w + 1)) : Bool × BitVec w ≃ BitVec (w + 1) where
   toFun bp := bp.2.insertLsb bp.1 i

@@ -5,6 +5,17 @@ import PermNetwork.CBIterative.Lib.Nat
 import PermNetwork.CBIterative.Lib.Fin
 import Mathlib.Algebra.Order.Star.Basic
 
+/-!
+# Supplementary `Vector` lemmas, conditional swaps, and `Nodup`
+
+The `Vector`-level counterpart to `Lib.Array`: element-wise lemmas for `swapIfInBounds`, `eraseIdx`,
+`tail`, `back`, `push`/`pop`, and the conditional swaps `bswap`/`bswapIfInBounds` (swap two entries
+only when a boolean flag is set).
+
+It also adds a `push`-based `induction`/`cases` eliminator (built by repeated pushes),
+and a `Nodup` predicate for vectors together with its basic API and a decidability instance.
+-/
+
 namespace Vector
 
 variable {α β γ : Type*} {n m k i j : ℕ}
@@ -69,6 +80,8 @@ theorem swap_same {xs : Vector α n} {i : Nat} {hi} : xs.swap i i hi hi = xs := 
 @[simp, grind =]
 theorem swapIfInBounds_same {xs : Vector α n} {i : Nat} : xs.swapIfInBounds i i = xs := by grind
 
+/-- Conditional swap: swap entries `i` and `j` of `xs` if `b` is `true`, otherwise leave `xs`
+unchanged. -/
 def bswap (xs : Vector α n) (b : Bool) (i j : Nat) (hi : i < n := by get_elem_tactic)
     (hj : j < n := by get_elem_tactic) : Vector α n :=
   ⟨xs.toArray.bswap b i j (by grind) (by grind), by grind⟩
@@ -86,6 +99,8 @@ theorem bswap_true {xs : Vector α n} {i j : Nat} {hi hj} :
 theorem bswap_false {xs : Vector α n} {i j : Nat} {hi hj} :
     xs.bswap false i j hi hj = xs := by grind
 
+/-- Bounds-checked conditional swap: like `bswap`, but out-of-range indices leave `xs` unchanged, so
+no bounds proofs are required. -/
 def bswapIfInBounds (xs : Vector α n) (b : Bool) (i j : @& Nat) : Vector α n :=
   ⟨xs.toArray.bswapIfInBounds b i j, by grind⟩
 
@@ -105,6 +120,8 @@ theorem bswapIfInBounds_false {xs : Vector α n} {i j : Nat} :
 
 theorem back_push {v : Vector α n} {a : α} : (v.push a).back = a := by grind
 
+/-- Induction on vectors by pushing: prove `C` for `#v[]` and for `xs.push x` given `C xs`.
+Registered as the default `induction` eliminator for `Vector`. -/
 @[elab_as_elim, induction_eliminator]
 def induction {C : ∀ {n : ℕ}, Vector α n → Sort*} (empty : C #v[])
     (push : ∀ (n : ℕ) (xs : Vector α n) (x : α), C xs → C (xs.push x)) :
@@ -112,6 +129,8 @@ def induction {C : ∀ {n : ℕ}, Vector α n → Sort*} (empty : C #v[])
   | 0, xs => xs.eq_empty ▸ empty
   | n + 1, xs => xs.push_pop_back ▸ push (n + 1 - 1) xs.pop xs.back (induction empty push _)
 
+/-- Case analysis on vectors: either empty or of the form `xs.push x`. Registered as the default
+`cases` eliminator for `Vector`. -/
 @[elab_as_elim, cases_eliminator, grind =]
 def cases {C : ∀ {n : ℕ}, Vector α n → Sort*}
     (empty : C #v[])
@@ -128,6 +147,7 @@ variable {v : Vector α n}
 
 open Function
 
+/-- A vector has no duplicate entries: equal entries force equal indices. -/
 def Nodup (v : Vector α n) : Prop := ∀ {i} (hi : i < n) {j} (hj : j < n), v[i] = v[j] → i = j
 
 section Nodup

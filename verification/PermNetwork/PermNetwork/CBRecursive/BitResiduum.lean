@@ -10,12 +10,34 @@ import Mathlib.Algebra.Order.Ring.Nat
 
 notation:75  "BV " arg:75   => Fin (2^arg)
 
+/-!
+# Bits and residua of a bit vector
+
+`BV m` abbreviates `Fin (2 ^ m)`, a bit vector of length `m` viewed as a number. This file sets up
+the machinery for looking at one chosen bit of such a vector while treating the rest — the
+*residuum* — as a shorter bit vector, which is the fundamental move of the recursive construction.
+
+* `getBitRes i` is the equivalence `BV (m + 1) ≃ Bool × BV m` splitting off bit `i`; `getBit`,
+  `getRes` and `mergeBitRes` are its components (read the bit, read the residuum, reassemble). The
+  `Zero`/`Succ`/`CastSucc`/`SuccAbove` variants repackage this splitting for the various positions
+  the recursion needs.
+* `bitInvar i f` says `f` fixes bit `i`. Such maps are exactly those assembled from a `Bool`-indexed
+  family of maps on the residuum, via `ofPairBVMap`/`pairBVMap`; packaged as the submonoid
+  `bitInvarSubmonoid` / subgroup `bitInvarSubgroup` and the isomorphisms `bitInvarMulEquivEnd` and
+  `bitInvarMulEquiv`. The latter, `(Bool → Perm (BV m)) ≃* bitInvarSubgroup i`, is what lets the
+  recursion descend from `BV (m + 1)` to two copies of `BV m`.
+* `flipBit i` flips bit `i`; `condFlipBit i c` flips it conditionally on `c` evaluated at the
+  residuum. These are the permutations the control-bit network is built from.
+-/
+
 variable {m : ℕ} {i : Fin (m + 1)} {q : BV (m + 1)} {p : BV m} {b : Bool}
 
 section BitRes
 
 section GetMerge
 
+/-- Split a bit vector into its `i`-th bit and its residuum (the other `m` bits, as a `BV m`).
+The core equivalence of this file. -/
 def getBitRes (i : Fin (m + 1)) : BV (m + 1) ≃ Bool × BV m :=
 calc
   _ ≃ (Fin (m + 1) → Fin 2)   := finFunctionFinEquiv.symm
@@ -30,10 +52,14 @@ lemma getBitRes_symm_apply (i : Fin (m + 1)) (bp : Bool × BV m) : (getBitRes i)
   finFunctionFinEquiv (i.insertNth (finTwoEquiv.symm bp.fst) (finFunctionFinEquiv.symm bp.snd)) :=
   rfl
 
+/-- The `i`-th bit of a bit vector. -/
 def getBit (i : Fin (m + 1)) : BV (m + 1) → Bool := Prod.fst ∘ (getBitRes i)
 
+/-- The residuum of a bit vector at `i`: the other `m` bits, as a `BV m`. -/
 def getRes (i : Fin (m + 1)) : BV (m + 1) → BV m := Prod.snd ∘ (getBitRes i)
 
+/-- Reassemble a bit vector from a bit `b` placed at position `i` and a residuum. Inverse to
+`getBit`/`getRes`. -/
 def mergeBitRes (i : Fin (m + 1)) := Function.curry (getBitRes i).symm
 
 lemma getBit_apply : getBit i q = (getBitRes i q).fst := rfl
@@ -91,6 +117,8 @@ lemma mergeBitRes_apply_true_zero {i : Fin (m + 1)} :
   mergeBitRes i true 0 = ⟨2^(i : ℕ), pow_lt_pow_right₀ one_lt_two i.isLt⟩ := by
   rw [mergeBitRes_apply, ← getBitRes_apply_two_pow (i := i), Equiv.symm_apply_apply]
 
+/-- `getBitRes` at position `0`, presented concretely via `divNat`/`modNat` (bit `0` is the
+low bit) rather than through the general `insertNth` machinery. -/
 def getBitResZero : BV (m + 1) ≃ Bool × BV m :=
  calc
   _ ≃ _ := finProdFinEquiv.symm
@@ -169,6 +197,8 @@ lemma getRes_base {i : Fin 1} {q : BV 1} : getRes (m := 0) i q = 0 := by
   rw [Fin.eq_zero i]
   rcases Fin.exists_fin_two.mp ⟨q, rfl⟩ with (rfl | rfl) <;> rfl
 
+/-- `getBitRes` at a successor position `i.succ`, arranged so that it first peels off bit `0` and
+then applies `getBitRes i` to what remains — the shape the recursion consumes. -/
 def getBitResSucc (i : Fin (m + 1)) : BV (m + 2) ≃ Bool × BV (m + 1) :=
 calc
   _ ≃ _ := getBitRes 0
@@ -213,6 +243,8 @@ lemma mergeBitRes_succ (i : Fin (m + 1)) : mergeBitRes i.succ b q =
     mergeBitRes 0 (getBit 0 q) (mergeBitRes i b (getRes 0 q)) := by
   simp_rw [mergeBitRes_apply, getBit_apply, getRes_apply, getBitRes_succ_symm_apply]
 
+/-- `getBitRes` at a `castSucc` position `i.castSucc`, arranged so that it first peels off the
+`last` bit and then applies `getBitRes i` to what remains — the mirror image of `getBitResSucc`. -/
 def getBitResCastSucc (i : Fin (m + 1)) : BV (m + 2) ≃ Bool × BV (m + 1) :=
 calc
   _ ≃ _ := getBitRes (Fin.last _)
@@ -262,6 +294,9 @@ lemma mergeBitRes_castSucc (i : Fin (m + 1)) : mergeBitRes i.castSucc b q =
     mergeBitRes (Fin.last _) (getBit (Fin.last _) q) (mergeBitRes i b (getRes (Fin.last _) q)) := by
   simp_rw [mergeBitRes_apply, getBit_apply, getRes_apply, getBitRes_castSucc_symm_apply]
 
+/-- `getBitRes` at position `j.succAbove i`, obtained by splitting off bit `j` first and then bit
+`i` from the residuum. This is the general two-position split from which the `Succ`/`CastSucc`
+variants are the `j = 0` / `j = last` cases. -/
 def getBitResSuccAbove (j : Fin (m + 2)) (i : Fin (m + 1)) :
   BV (m + 2) ≃ Bool × BV (m + 1) :=
 calc
@@ -443,6 +478,7 @@ end GetMerge
 
 section bitInvar
 
+/-- `f` is bit-invariant at `i`: it never changes bit `i` of its argument. -/
 def bitInvar (i : Fin (m + 1)) (f : BV (m + 1) → BV (m + 1)) : Prop :=
   ∀ q, getBit i (f q) = getBit i q
 
@@ -510,6 +546,8 @@ lemma bitInvar_of_mulPerm_bitInvar_bitInvar {π ρ : Equiv.Perm (BV (m + 1))}
 
 lemma onePerm_bitInvar {i : Fin (m + 1)} : bitInvar i ⇑(1 : Equiv.Perm (BV (m + 1))) := id_bitInvar
 
+/-- Assemble a bit-invariant map from a `Bool`-indexed pair of maps on the residuum: keep bit `i`
+and act on the residuum by `fg` selected on the value of bit `i`. -/
 def ofPairBVMap (i : Fin (m + 1)) (fg : Bool → BV m → BV m) (q : BV (m + 1)) : BV (m + 1) :=
     mergeBitRes i (getBit i q) (fg (getBit i q) (getRes i q))
 
@@ -522,6 +560,8 @@ lemma ofPairEndBV_apply :  ofPairBVMap i φ q =
 lemma bitInvar_ofPairEndBV {fg : Bool → BV m → BV m} :
     bitInvar i (ofPairBVMap i fg) := bitInvar_of_getBit_apply_eq_getBit <| by simp
 
+/-- Decompose a map into its action on the residuum for each fixed value `b` of bit `i`. Inverse to
+`ofPairBVMap` on bit-invariant maps (`ofPairBVMap_pairBVMap_of_bitInvar`). -/
 def pairBVMap (i : Fin (m + 1)) (f : BV (m + 1) → BV (m + 1))
     (b : Bool) (p : BV m) : BV m := getRes i (f (mergeBitRes i b p))
 
@@ -544,6 +584,7 @@ theorem ofPairBVMap_comp : ofPairBVMap i φ ∘ ofPairBVMap i ψ =
 
 section Submonoid
 
+/-- The submonoid of endomorphisms of `BV (m + 1)` that are bit-invariant at `i`. -/
 def bitInvarSubmonoid (i : Fin (m + 1)) : Submonoid (Function.End (BV (m + 1))) where
   carrier f := bitInvar i f
   mul_mem' ha hb := bitInvar_comp_of_bitInvar ha hb
@@ -563,6 +604,7 @@ end Submonoid
 
 section Subgroup
 
+/-- The subgroup of permutations of `BV (m + 1)` that are bit-invariant at `i`. -/
 def bitInvarSubgroup (i : Fin (m + 1)) : Subgroup (Equiv.Perm (BV (m + 1))) where
   carrier π := bitInvar i ⇑π
   mul_mem' ha hb := bitInvar_mulPerm_of_bitInvar ha hb
@@ -592,6 +634,8 @@ end Subgroup
 
 section Equivs
 
+/-- Bit-invariant endomorphisms at `i` are exactly pairs of endomorphisms of the residuum, one per
+value of bit `i`: `(Bool → End (BV m)) ≃* bitInvarSubmonoid i`, via `ofPairBVMap`/`pairBVMap`. -/
 def bitInvarMulEquivEnd (i : Fin (m + 1)) :
     (Bool → Function.End (BV m)) ≃* bitInvarSubmonoid i where
   toFun φ := ⟨ofPairBVMap i φ, bitInvar_ofPairEndBV⟩
@@ -609,6 +653,9 @@ theorem bitInvarMulEquivEnd_apply_val_apply (feo : Bool → Function.End (BV m))
 theorem bitInvarMulEquivEnd_symm_apply_apply (f : bitInvarSubmonoid i) :
   ((bitInvarMulEquivEnd i).symm f) b p = getRes i (f.1 (mergeBitRes i b p)) := rfl
 
+/-- The permutation-level counterpart: bit-invariant permutations at `i` are exactly pairs of
+permutations of the residuum, `(Bool → Perm (BV m)) ≃* bitInvarSubgroup i`. This isomorphism is the
+structural engine of the recursion, splitting a permutation of `BV (m + 1)` into two of `BV m`. -/
 def bitInvarMulEquiv (i : Fin (m + 1)) : (Bool → Equiv.Perm (BV m)) ≃* bitInvarSubgroup i :=
   (Equiv.Perm.equivUnitsEnd.arrowCongr (Equiv.refl _)).trans <|
   MulEquiv.piUnits.symm.trans <|
@@ -642,6 +689,7 @@ section FlipBit
 
 variable {k : BV m}
 
+/-- The permutation that flips bit `i`, leaving the residuum untouched. -/
 def flipBit (i : Fin (m + 1)) : Equiv.Perm (BV (m + 1)) :=
 (getBitRes i).symm.permCongr <| Equiv.boolNot.prodCongr (Equiv.refl _)
 
@@ -811,6 +859,8 @@ lemma eq_flipBit_of_lt_of_flipBit_gt {r : BV (m + 1)} (h : r < q)
 
 section CondFlipBit
 
+/-- Conditionally flip bit `i`: flip it when the control `c`, evaluated at the residuum, is `true`,
+and otherwise leave `q` alone. An involution, and the basic layer of a control-bit network. -/
 def condFlipBit (i : Fin (m + 1)) (c : BV m → Bool) : Equiv.Perm (BV (m + 1)) where
   toFun q := bif c (getRes i q) then flipBit i q else q
   invFun q := bif c (getRes i q) then flipBit i q else q

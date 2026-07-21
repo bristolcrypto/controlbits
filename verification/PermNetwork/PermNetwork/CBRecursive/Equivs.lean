@@ -1,5 +1,14 @@
 import Mathlib.Data.Fin.Tuple.Basic
 
+/-!
+# Splitting off the first and last coordinate of a tuple
+
+The equivalence `piFinSuccCastSucc` reshapes a tuple `Fin (n + 2) → α` into its first entry, its
+last entry, and the `Fin n → α` tuple of interior entries: `(α × α) × (Fin n → α)`. The accompanying
+`simp` lemmas compute it and its inverse on the relevant indices. Also included is `Equiv.boolNot`,
+the negation permutation of `Bool`.
+-/
+
 variable {n : ℕ} {α : Type*}
 
 open Fin

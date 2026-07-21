@@ -1,6 +1,13 @@
 import Mathlib.Data.Nat.SuccPred
 import PermNetwork.CBRecursive.Order
 
+/-!
+# `Nat` specialisation of the conditional-successor order lemma
+
+Specialises `Order.eq_false_true_of_cond_succ_lt_of_cond_succ_lt` to `ℕ`, where the optional
+successor bump is written arithmetically as `+ (bif b then 1 else 0)`.
+-/
+
 namespace Nat
 
 lemma eq_false_true_of_cond_succ_lt_of_cond_succ_lt {m n : ℕ} {bn bm : Bool}

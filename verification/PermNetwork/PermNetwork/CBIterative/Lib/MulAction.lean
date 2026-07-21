@@ -1,5 +1,14 @@
 import Mathlib.GroupTheory.GroupAction.Period
 
+/-!
+# Bounds on the period of a group action
+
+Supplementary lemmas about `MulAction.period`. `period_le_card_of_smul_pow_mem` bounds the period of
+`a` at `i` by the size of any finite set that the orbit stays within, and
+`smul_injOn_range_period` says the powers `a ^ k • x` are distinct for `k` below the period. These
+control the length of the cycles that the cycle-minimum computation must traverse.
+-/
+
 namespace MulAction
 
 variable {G α : Type*} [Group G] [MulAction G α]

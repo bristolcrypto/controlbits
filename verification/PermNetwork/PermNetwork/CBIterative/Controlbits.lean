@@ -1,5 +1,29 @@
 import PermNetwork.CBIterative.Flipbit
 set_option linter.style.header false
+
+/-!
+# Iterative control-bit decomposition
+
+This file builds the control bits of a permutation `a : PermOf (2 ^ (n + 1))` by the iterative
+(Robson–Kelly) variant of Bernstein's formulae. Working one bit position `i` at a time, we peel a
+conditional bit-flip layer off each side of `a`:
+
+* `leftLayer`/`rightLayer` are the control-bit layers for bit `i`, read off from bit `i` of the
+  cycle minima of the `flipBit i` commutator of `a`;
+* `leftPerm`/`rightPerm` are those layers realised as `condFlipBit i` permutations;
+* `middlePerm a i = leftPerm a i * a * rightPerm a i` is the residual permutation, which is now
+  bit-invariant on every bit `≤ i`.
+
+`toCBLayer` iterates this decomposition, accumulating the left and right layers, and
+`middlePermIth`/`leftLayerIth`/`rightLayerIth` name the running middle permutation and the
+individual layers produced at each step. The key factorisation `eq_foldl_mul_foldl_succ` shows that
+`a` is recovered as the product of all the left layer permutations followed by all the right ones —
+i.e. the layers form a control-bit (Beneš) network for `a`.
+
+`toControlBits` assembles the full `2 * n + 1` layers into a single control-bit vector, and
+`ofControlBits` runs a control-bit vector as a network, applying it to an arbitrary vector.
+-/
+
 namespace PermOf
 
 variable {n i p k : ℕ} {a : PermOf (2 ^ (n + 1))}
@@ -7,6 +31,9 @@ variable {n i p k : ℕ} {a : PermOf (2 ^ (n + 1))}
 section Decomposition
 open Equiv Equiv.Perm Nat Function
 
+/-- The left control-bit layer of `a` at bit position `i`: for each index `p` (with bit `i`
+cleared) it records bit `i` of the cycle minimum of `a`'s `flipBit i` commutator. For `i > n` the
+layer is all `false`. -/
 def leftLayer (a : PermOf (2 ^ (n + 1))) (i : ℕ) : Vector Bool (2 ^ n) :=
   if hi : i ≤ n then
     let A := (a.flipBitCommutator i).CycleMinVector (n - i);
@@ -72,6 +99,8 @@ theorem getElem_zero_leftLayer_zero :
 
 end LeftLayer
 
+/-- The left layer at bit `i` realised as a permutation: the conditional bit-flip of bit `i`
+driven by `leftLayer a i`. It is an involution and is bit-invariant away from bit `i`. -/
 def leftPerm (a : PermOf (2 ^ (n + 1))) (i : ℕ) : PermOf (2 ^ (n + 1)) :=
   condFlipBit i (leftLayer a i)
 
@@ -119,6 +148,10 @@ theorem testBit_leftPerm {i : ℕ}
 
 end LeftPerm
 
+/-- The right control-bit layer of `a` at bit position `i`: bit `i` of where `leftPerm a i ∘ a`
+sends each residuum value (see `getElem_rightLayer_of_le`). Reading it off after the left layer has
+been applied is what makes the resulting middle permutation bit-invariant on bit `i` (see
+`bitInvariant_middlePerm`). For `i > n` the layer is all `false`. -/
 def rightLayer (a : PermOf (2 ^ (n + 1))) (i : ℕ) : Vector Bool (2 ^ n) :=
   if hi : i ≤ n then
     let A := (a.flipBitCommutator i).CycleMinVector (n - i);
@@ -169,6 +202,8 @@ theorem rightLayer_eq_of_gt {i : ℕ} (hi : n < i) :
 
 end RightLayer
 
+/-- The right layer at bit `i` realised as a permutation: the conditional bit-flip of bit `i`
+driven by `rightLayer a i`. It is an involution and is bit-invariant away from bit `i`. -/
 def rightPerm (a : PermOf (2 ^ (n + 1))) (i : ℕ) : PermOf (2 ^ (n + 1)) :=
   condFlipBit i (rightLayer a i)
 
@@ -223,6 +258,9 @@ theorem testBit_rightPerm {i : ℕ}
 
 end RightPerm
 
+/-- The residual permutation after peeling the left and right layers at bit `i`, equal to
+`leftPerm a i * a * rightPerm a i` (see `middlePerm_eq_leftPerm_mul_mul_rightPerm`). It agrees with
+`a` on every bit other than `i` and is bit-invariant on bit `i`. -/
 def middlePerm (a : PermOf (2 ^ (n + 1))) (i : ℕ) : PermOf (2 ^ (n + 1)) :=
   if hi : i ≤ n then
     let A := (a.flipBitCommutator i).CycleMinVector (n - i);
@@ -290,6 +328,10 @@ theorem bitInvariant_middlePerm_of_gt {i : ℕ} {j : ℕ} (hj : n < j) :
 
 end MiddlePerm
 
+/-- The single-step decomposition at bit `i`, bundling the middle permutation with the left and
+right layers it was built from: `(middlePerm a i, leftLayer a i, rightLayer a i)` (see
+`mlrDecomp_eq_left_middle_right`). The bundled form shares the intermediate cycle-min computation
+between the three components. -/
 def mlrDecomp (a : PermOf (2 ^ (n + 1))) (i : ℕ) :
     PermOf (2 ^ (n + 1)) × Vector Bool (2 ^ n) × Vector Bool (2 ^ n) :=
   if hi : i ≤ n then
@@ -337,6 +379,9 @@ theorem condFlipBit_mlrDecomp_snd_fst_mul_mlrDecomp_fst_mul_mlrDecomp_snd_snd {i
 
 end mlrDecomp
 
+/-- Iterate `mlrDecomp` over bit positions `0, 1, …, i - 1`, returning the running middle
+permutation together with the vectors of the `i` left layers and `i` right layers accumulated so
+far. -/
 def toCBLayer (a : PermOf (2 ^ (n + 1))) (i : ℕ) :
     PermOf (2 ^ (n + 1)) × Vector (Vector Bool (2 ^ n)) i ×
     Vector (Vector Bool (2 ^ n)) i := i.recOn ((a, #v[], #v[]))
@@ -364,6 +409,9 @@ theorem toCBLayer_succ :
   simp_rw [toCBLayer_succ, toCBLayer_zero, Vector.push_mk,
     List.push_toArray, List.nil_append]
 
+/-- The running middle permutation after `i` decomposition steps, i.e. `a` with its first `i` left
+and right layers peeled off. It is bit-invariant on every bit `< i`, and once `i > n` it is the
+identity. -/
 def middlePermIth (a : PermOf (2 ^ (n + 1))) (i : ℕ) : PermOf (2 ^ (n + 1)) :=
   (toCBLayer a i).1
 
@@ -388,6 +436,8 @@ theorem middlePermIth_eq_of_gt (hi : n < i) :
   rw [← forall_lt_bitInvariant_iff_eq_one_of_ge le_rfl]
   exact fun _ hk => a.middlePermIth_bitInvariant _ (hk.trans_le (Nat.succ_le_of_lt hi))
 
+/-- The `i`-th left layer produced during the decomposition, i.e. `leftLayer` of the middle
+permutation after `i` steps (see `leftLayerIth_eq`). -/
 def leftLayerIth (a : PermOf (2 ^ (n + 1))) (i : ℕ) : Vector Bool (2 ^ n) :=
   (toCBLayer a (i + 1)).2.1.back
 
@@ -419,6 +469,8 @@ theorem leftLayerIth_eq_of_ge (hi : n ≤ i) :
     a.leftLayerIth i = Vector.replicate _ false :=
   hi.eq_or_lt.elim (fun h => h ▸ leftLayerNth_eq) (leftLayerIth_eq ▸ leftLayer_eq_of_gt)
 
+/-- The `i`-th right layer produced during the decomposition, i.e. `rightLayer` of the middle
+permutation after `i` steps (see `rightLayerIth_eq`). -/
 def rightLayerIth (a : PermOf (2 ^ (n + 1))) (i : ℕ) : Vector Bool (2 ^ n) :=
   (toCBLayer a (i + 1)).2.2.back
 
@@ -451,6 +503,7 @@ theorem toCBLayer_eq :
         not_lt, Nat.lt_succ_iff] <;>
     exact fun hle hge => le_antisymm hle hge ▸ rfl
 
+/-- The `i`-th left layer realised as a `condFlipBit i` permutation. -/
 def leftPermIth (a : PermOf (2 ^ (n + 1))) (i : ℕ) : PermOf (2 ^ (n + 1)) :=
   condFlipBit i (a.leftLayerIth i)
 
@@ -470,6 +523,7 @@ theorem leftPermIth_zero :
     a.leftPermIth 0 = a.leftPerm 0 := by
   rw [leftPermIth_eq, middlePermIth_zero]
 
+/-- The `i`-th right layer realised as a `condFlipBit i` permutation. -/
 def rightPermIth (a : PermOf (2 ^ (n + 1))) (i : ℕ) : PermOf (2 ^ (n + 1)) :=
   condFlipBit i (a.rightLayerIth i)
 
@@ -509,6 +563,9 @@ theorem eq_fold_mul_middlePermIth_mul_fold (i : ℕ) :
       ← mul_assoc]
     exact IH
 
+/-- The control-bit network reconstructs `a`: it is the product of all `n` left layer permutations
+followed by all `n + 1` right layer permutations. This is the correctness statement that the layers
+computed above really do form a control-bit network for `a`. -/
 theorem eq_foldl_mul_foldl_succ :
     a = (Nat.fold n (fun k _ l => l * a.leftPermIth k) 1) *
     (Nat.fold (n + 1) (fun k _ r => a.rightPermIth k * r) 1) := by
@@ -517,6 +574,9 @@ theorem eq_foldl_mul_foldl_succ :
     Nat.fold_succ _ (fun k _ l => l * a.leftPermIth k),
     leftPermIth_eq_of_ge le_rfl, mul_one, mul_one] at H
 
+/-- The full control-bit vector of `a`: the `2 * n + 1` layers of a Beneš network, namely the left
+layers `0, …, n - 1` followed by all right layers in reverse order. (The final left layer is dropped
+by `L.pop` since it is always trivial.) -/
 def toControlBits (a : PermOf (2 ^ (n + 1))) :
     Vector (Vector Bool (2 ^ n)) (2*n + 1) :=
   let (_, L, R) := toCBLayer a (n + 1)
@@ -544,9 +604,17 @@ theorem getElem_toControlBits (hi' : i < (2 * n + 1)) :
 
 end Decomposition
 
+/-- Run a control-bit vector `v` as a network on the vector `a`: fold over the `2 * n + 1` layers,
+applying layer `k`'s control bits `v[k]` as a conditional bit flip (`condFlipBitIndices`) at bit
+position `min k (2 * n - k)` — the schedule `0, 1, …, n, …, 1, 0` that `toControlBits` produces.
+
+This is the interpretation direction for control bits, expected to invert `toControlBits` (running
+the control bits of a permutation reproduces its action). That inversion is believed to hold but is
+not yet proved here — the `condFlipBitIndices`/`toCBLayer` API makes it fiddly — so unlike
+`toControlBits` this definition currently carries no accompanying correctness lemmas. -/
 def ofControlBits {α : Type*} {m : ℕ} (v : Vector (Vector Bool (2 ^ n)) (2 * n + 1))
     (a : Vector α m) : Vector α m :=
-  v.zipIdx.foldl (fun a c => a.condFlipBitIndices (min c.2 ((n + 1) - c.2)) c.1) a
+  v.zipIdx.foldl (fun a c => a.condFlipBitIndices (min c.2 (2 * n - c.2)) c.1) a
 
 --#eval (1 : PermOf (2^11)).toControlBits (n := 10)
 

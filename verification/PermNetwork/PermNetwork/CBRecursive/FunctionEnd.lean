@@ -1,5 +1,12 @@
 import Mathlib.Algebra.Group.Action.End
 
+/-!
+# `FunLike` structure on `Function.End`
+
+Supplementary instances letting elements of the endomorphism monoid `Function.End α` be applied and
+compared pointwise like ordinary functions: a `FunLike` instance and the corresponding `ext` lemma.
+-/
+
 universe u
 
 instance Function.End.instFunLikeEnd {α : Type u} : FunLike (Function.End α) α α where

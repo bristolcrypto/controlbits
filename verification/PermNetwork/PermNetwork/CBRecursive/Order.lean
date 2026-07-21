@@ -1,5 +1,14 @@
 import Mathlib.Order.SuccPred.Basic
 
+/-!
+# Order lemmas for successor/predecessor orders
+
+Supplementary lemmas about `SuccOrder`/`PredOrder`. The main result,
+`eq_false_true_of_cond_succ_lt_of_cond_succ_lt`, analyses a pair of strict inequalities where each
+side is optionally bumped by a successor depending on a `Bool`, and pins down the only way both can
+hold at once. It is used to reason about the boundary behaviour of the bit-flip maps.
+-/
+
 namespace Order
 
 theorem lt_pred_of_lt_of_lt {α : Type*} [Preorder α] [PredOrder α]

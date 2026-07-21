@@ -1,6 +1,15 @@
 import Mathlib.Order.Fin.Basic
 import Mathlib.Data.Fin.Basic
 
+/-!
+# Supplementary `Fin` lemmas
+
+Assorted `Fin` facts used by the recursive construction: how `Fin.rev` relates `0`/`last` and
+`castSucc`/`succ`, and order/composition facts for `succAbove`/`predAbove`
+— most substantially `succAbove_succAbove_predAbove_succAbove`, a pentagon-style identity for nested
+insertions that underlies the recursion on tuple length.
+-/
+
 variable {n m : ℕ}
 
 namespace Fin

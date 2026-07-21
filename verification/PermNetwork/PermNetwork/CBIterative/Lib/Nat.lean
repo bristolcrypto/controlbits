@@ -2,6 +2,21 @@ import Mathlib.Tactic.SimpRw
 import Mathlib.Data.Nat.Size
 import Mathlib.Data.Nat.Bitwise
 
+/-!
+# Supplementary `Nat` lemmas, especially for bit manipulation
+
+A grab-bag of `Nat` API underpinning the bit-level view of the control-bit algorithms, grouped into
+sections:
+
+* quantifier-shifting lemmas (`forall_add_right`, `exists_sub`, …) and `mod`/`div` injectivity;
+* `Nat.fold`/`foldRev` manipulation, including that reversing a fold is a fold over reversed indices
+  (`foldRev_eq_fold`), and the recursor `foldRecOn`;
+* an extensional treatment of `testBit`: a number is determined by its bits (`testBit_eq_iff`), with
+  bit formulae for `+`, `*`, `%`, `/`, shifts, and the bitwise `|||`/`&&&`/`^^^` operations.
+
+These are the workhorse lemmas the `grind`-heavy proofs elsewhere in `CBIterative` rely on.
+-/
+
 namespace Nat
 
 universe u
@@ -94,6 +109,8 @@ theorem fold_eq_foldRev {α : Type u} (n : Nat)
     congr
     rw [Nat.eq_sub_of_add_eq' hij]
 
+/-- Recursor for `Nat.fold`: to prove a `motive` of `n.fold f a`, give it for the initial value `a`
+and show each folding step `f i hi` preserves it. -/
 def foldRecOn {α : Type u} {motive : α → Sort*} : (n : Nat) → (f : (i : Nat) → i < n → α → α) →
   {a : α} → motive a → (∀ a, motive a → (i : Nat) → (hi : i < n) → motive (f i hi a)) →
     motive (n.fold f a)

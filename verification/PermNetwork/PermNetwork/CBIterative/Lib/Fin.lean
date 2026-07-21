@@ -1,3 +1,11 @@
+/-!
+# Injective iff surjective for self-maps of `Fin n`
+
+Supplementary `Fin` lemmas. The main content is that a self-map `Fin n → Fin n` is injective exactly
+when it is surjective (`injective_iff_surjective`), proved constructively via `grind`. Also included
+is the value of the bitwise xor on `Fin n`.
+-/
+
 namespace Fin
 
 variable {n : Nat}

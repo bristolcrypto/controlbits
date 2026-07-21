@@ -1,6 +1,22 @@
 import PermNetwork.CBRecursive.Commutator
 import PermNetwork.CBRecursive.Cycles
 
+/-!
+# Cycle minima of a commutator `⁅x, y⁆`
+
+The control-bit construction hinges on how the cycle minimum of the commutator `⁅x, y⁆` interacts
+with `x` and `y`. This file collects those facts for a general commutator, under hypotheses that
+`⁅x, y⁻¹⁆ = ⁅x, y⁆` and that `y` is fixed-point-free (later instantiated with `y = flipBit 0`):
+
+* the cycle minimum is unchanged when the base point is moved by `x ∘ y` versus `y ∘ x`
+  (`cycleMin_cmtr_apply_comm`);
+* each cycle of `⁅x, y⁆` and its image under `y` are disjoint, so at most half of any `y`-stable
+  set lies in a single cycle (`two_mul_filter_sameCycle_card_le_card`) — this is the counting bound
+  that makes the recursion halve the problem size;
+* `y` commutes with taking the cycle minimum
+  (`cycleMin_cmtr_right_apply_eq_apply_cycleMin_cmtr`).
+-/
+
 set_option autoImplicit false
 
 universe u

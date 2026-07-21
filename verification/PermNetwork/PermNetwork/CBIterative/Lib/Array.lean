@@ -1,5 +1,17 @@
 import Mathlib.Algebra.Order.Ring.Nat
 
+/-!
+# Supplementary `Array` lemmas and conditional swaps
+
+Assorted `Array` API not (yet) in the standard library: index bounds for `zipWith`/`zip`,
+element-wise behaviour of `swapIfInBounds` and `eraseIdx`, and `push`/`pop`/`back` facts.
+
+The notable ones are the *conditional* swaps `bswap`/`bswapIfInBounds`, which swap two entries
+only when a boolean flag is `true` and otherwise return the array unchanged — the array-level
+building block of a conditional bit flip. Each comes with an `@[csimp]` replacement (`bswapImpl`,
+`bswapIfInBoundsImpl`) that performs the swap in place for efficient compiled execution.
+-/
+
 namespace Array
 
 variable {α β γ : Type*} {k i : ℕ}
@@ -64,6 +76,8 @@ theorem swap_same {xs : Array α} {i : Nat} {hi} : xs.swap i i hi hi = xs := by 
 @[simp, grind =]
 theorem swapIfInBounds_same {xs : Array α} {i : Nat} : xs.swapIfInBounds i i = xs := by grind
 
+/-- Conditional swap: swap entries `i` and `j` of `xs` if `b` is `true`, otherwise leave `xs`
+unchanged. -/
 def bswap (xs : Array α) (b : Bool) (i j : Nat) (hi : i < xs.size := by get_elem_tactic)
     (hj : j < xs.size := by get_elem_tactic) : Array α := bif b then xs.swap i j else xs
 
@@ -83,6 +97,8 @@ theorem bswap_true {xs : Array α} {i j : Nat} {hi hj} :
 theorem bswap_false {xs : Array α} {i j : Nat} {hi hj} :
     xs.bswap false i j hi hj = xs := by grind
 
+/-- In-place implementation of `bswap`, used via `@[csimp]` for efficient compiled code: it writes
+the two entries directly rather than calling `Array.swap`. -/
 def bswapImpl (xs : Array α) (b : Bool) (i j : Nat) (hi : i < xs.size := by get_elem_tactic)
     (hj : j < xs.size := by get_elem_tactic) : Array α :=
   let v₁ := bif b then xs[j] else xs[i]
@@ -93,6 +109,8 @@ def bswapImpl (xs : Array α) (b : Bool) (i j : Nat) (hi : i < xs.size := by get
 @[csimp] theorem bswap_eq_bswapImpl : @bswap = @bswapImpl := by
   ext <;> grind [bswap, bswapImpl]
 
+/-- Bounds-checked conditional swap: like `bswap`, but tolerates out-of-range indices by falling
+back to `swapIfInBounds`, so no proofs `i, j < xs.size` are required. -/
 def bswapIfInBounds (xs : Array α) (b : Bool) (i j : @& Nat) : Array α :=
   bif b then xs.swapIfInBounds i j else xs
 
@@ -113,6 +131,8 @@ theorem bswapIfInBounds_true {xs : Array α} {i j : Nat} :
 theorem bswapIfInBounds_false {xs : Array α} {i j : Nat} :
     xs.bswapIfInBounds false i j = xs := by grind
 
+/-- In-place implementation of `bswapIfInBounds`, used via `@[csimp]`: it checks the bounds and then
+delegates to the in-place `bswap`. -/
 def bswapIfInBoundsImpl (xs : Array α) (b : Bool) (i j : @& Nat) : Array α :=
   if hi : i < xs.size then if hj : j < xs.size then xs.bswap b i j else xs else xs
 

@@ -1,6 +1,21 @@
 import Mathlib.GroupTheory.Commutator.Basic
 import Mathlib.Algebra.Group.Int.Defs
 
+/-!
+# Commutator identities and fixed-point-freeness
+
+Algebraic groundwork for the cycle analysis of the commutator `⁅x, y⁆`.
+
+The `Group` section records how a (signed) power of `⁅x, y⁆` moves past `y`, e.g.
+`⁅x, y⁆ ^ k * y = y * (⁅x, y⁻¹⁆ ^ k)⁻¹`, and that `⁅x, y⁆ = ⁅x, y⁻¹⁆` iff `⁅x, y²⁆ = 1`.
+
+The `Perm` section uses these to prove the key fixed-point statements when `y` is fixed-point-free
+and `⁅x, y⁻¹⁆ = ⁅x, y⁆`: no power of the commutator sends `q` to `y q`
+(`cmtr_zpow_apply_ne_apply`), and more generally distinct powers never differ by `y`
+(`cmtr_zpow_apply_ne_apply_cmtr_pow_apply`). This is exactly what forces each commutator cycle to be
+disjoint from its `y`-image.
+-/
+
 set_option autoImplicit false
 
 section Group

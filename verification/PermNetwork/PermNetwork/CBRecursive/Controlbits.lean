@@ -9,12 +9,38 @@ open Fin Equiv
 
 open scoped commutatorElement
 
+/-!
+# Recursive control bits (Bernstein's construction)
+
+This file formalises Bernstein's recursive control-bit formulae and proves them correct. Theorem
+numbers in the comments refer to Bernstein's write-up.
+
+The construction peels one control-bit layer off each side of a permutation `π` of `BV (m + 1)`:
+
+* `XBackXForth π = ⁅π, flipBit 0⁆` is the commutator whose cycle minima drive the layers;
+* `FirstLayer`/`LastLayer` are the two outer control-bit layers, realised as the `condFlipBit 0`
+  permutations `FirstLayerPerm`/`LastLayerPerm`;
+* `MiddlePerm π = FirstLayerPerm π * π * LastLayerPerm π` is the residual permutation, which is
+  bit-`0`-invariant and so — via `bitInvarMulEquiv 0` — a pair of permutations of `BV m` on which
+  the construction recurses (`firstMiddleLast_decomposition`).
+
+`ControlBits m` is the full family of `2m + 1` layers. `ControlBits.toPerm` interprets a family as a
+permutation and `ControlBits.fromPerm` computes the family of a permutation. The headline result,
+`toPerm_leftInverse`, shows `toPerm ∘ fromPerm = id`: interpreting the control bits of `π` recovers
+`π`. `SerialControlBits` is the same data flattened to a single `Bool` array.
+
+The `controlBits1/2/3` definitions near the end are small worked examples used for evaluation.
+-/
+
+/-- One layer of control bits: a control bit for each residuum value in `BV m`. -/
 abbrev ControlBitsLayer (m : ℕ) := BV m → Bool
 
 variable {m : ℕ} {π : Perm (BV (m + 1))} {q : BV (m + 1)} {p : BV m}
 
 section Decomposition
 
+/-- The "X-back-X-forth" commutator `⁅π, flipBit 0⁆`; its cycle minima determine the control-bit
+layers. -/
 abbrev XBackXForth (π : Perm (BV (m + 1))) := ⁅π, flipBit (0 : Fin (m + 1))⁆
 
 lemma xBXF_def {π : Perm (BV (m + 1))} :
@@ -41,6 +67,8 @@ lemma cycleMin_xBXF_apply_flipBit_zero_eq_cycleMin_xBXF_flipBit_zero {q : BV (m 
 (XBackXForth π).CycleMin (π (flipBit 0 q)) = (XBackXForth π).CycleMin (flipBit 0 (π q)) :=
 cycleMin_cmtr_apply_comm
 
+/-- The first (leftmost) control-bit layer of `π`: bit `0` of the cycle minimum of `XBackXForth π`
+at each residuum value. -/
 def FirstLayer (π : Perm (BV (m + 1))) : ControlBitsLayer m :=
   fun p => getBit 0 ((XBackXForth π).FastCycleMin m (mergeBitRes 0 false p))
 
@@ -65,6 +93,7 @@ lemma firstLayer_base {π : Perm (BV 1)} : FirstLayer (m := 0) π = ![false] := 
   ext
   simp_rw [eq_zero, firstLayer_apply_zero, Matrix.cons_val_fin_one]
 
+/-- The first layer realised as a permutation: `condFlipBit 0 (FirstLayer π)`. -/
 def FirstLayerPerm (π : Perm (BV (m + 1))) := condFlipBit 0 (FirstLayer π)
 
 @[simp]
@@ -113,6 +142,8 @@ lemma getBit_zero_firstLayerPerm_apply_eq_getBit_zero_cycleMin {q : BV (m + 1)} 
     getBit_flipBit_of_eq, Bool.not_false, Bool.not_true,  Bool.cond_false_left, Bool.and_true,
     Bool.not_not]
 
+/-- The last (rightmost) control-bit layer of `π`: bit `0` of where `FirstLayerPerm π ∘ π` sends
+each residuum value. -/
 def LastLayer (π : Perm (BV (m + 1))) : ControlBitsLayer m :=
   fun p => getBit 0 ((FirstLayerPerm π) (π (mergeBitRes 0 false p)))
 
@@ -126,6 +157,7 @@ lemma lastLayer_base {π : Perm (BV 1)} : LastLayer (m := 0) π = fun _ => decid
     getBit_base, Perm.one_apply]
   rfl
 
+/-- The last layer realised as a permutation: `condFlipBit 0 (LastLayer π)`. -/
 def LastLayerPerm (π : Perm (BV (m + 1))) := condFlipBit 0 (LastLayer π)
 
 @[simp]
@@ -173,6 +205,8 @@ lemma getBit_zero_lastLayerPerm_apply_eq_getBit_zero_firstLayerPerm_perm_apply :
     cycleMin_xBXF_apply_flipBit_zero_eq_cycleMin_xBXF_flipBit_zero,
     cycleMin_xBXF_flipBit_zero_eq_flipBit_zero_cycleMin_xBXF, getBit_flipBit_of_eq, Bool.not_not]
 
+/-- The residual permutation `FirstLayerPerm π * π * LastLayerPerm π`, packaged with a proof that it
+is bit-`0`-invariant. Peeling both outer layers leaves this, on which the construction recurses. -/
 def MiddlePerm (π : Perm (BV (m + 1))) : bitInvarSubgroup (0 : Fin (m + 1)) :=
   ⟨(FirstLayerPerm π) * π * (LastLayerPerm π), by
     simp_rw [mem_bitInvarSubgroup, bitInvar_iff_getBit_apply_eq_getBit,
@@ -199,12 +233,17 @@ lemma firstMiddleLast_decomposition {π : Perm (BV (m + 1))} :
 
 end Decomposition
 
+/-- The `2n + 1` control-bit layers of the outer `n` levels of the recursion (a partially unfolded
+`ControlBits m`). -/
 abbrev PartialControlBits (m n : ℕ) := Fin (2*n + 1) → ControlBitsLayer m
 
 namespace PartialControlBits
 
 variable {m : ℕ}
 
+/-- Interpret `n` levels of control bits as a permutation: nest `condFlipBit` layers from the
+outside in, recursing on the bit-invariant middle. The full interpretation `ControlBits.toPerm` is
+the `n = last` case. -/
 def toPermPartial (n : Fin (m + 1)) :
   PartialControlBits m n → Perm (BV (m + 1)) :=
   n.induction (fun cb => condFlipBit (last _) (cb 0))
@@ -266,12 +305,14 @@ end PartialControlBits
 
 -- SECTION
 
+/-- The full family of `2m + 1` control-bit layers for a permutation of `BV (m + 1)`. -/
 abbrev ControlBits (m : ℕ) := PartialControlBits m m
 
 namespace ControlBits
 
 variable {m : ℕ}
 
+/-- Interpret a full family of control bits as a permutation. -/
 abbrev toPerm : ControlBits m → Perm (BV (m + 1)) :=
   PartialControlBits.toPermPartial (last _)
 
@@ -283,12 +324,16 @@ lemma toPerm_succ {cb : ControlBits (m + 1)} : toPerm cb = condFlipBit 0 (cb 0) 
   PartialControlBits.toPermPartial_succ_last
 
 
+/-- A first formulation of "compute the control bits of `π`", recursing on the middle permutation
+selected by bit `0`. Kept alongside the definitionally cleaner `fromPerm''` and the `if`-based
+`fromPerm` used in the rest of the file; all three agree. -/
 def fromPerm' {m : ℕ} : Perm (BV (m + 1)) → ControlBits m :=
 match m with
 | 0 => fun π _ => LastLayer π
 | (_ + 1) => fun π => piFinSuccCastSucc.symm ((FirstLayer π, LastLayer π),
   (fun k p => fromPerm' ((bitInvarMulEquiv 0).symm (MiddlePerm π) (getBit 0 p)) k (getRes 0 p)))
 
+/-- As `fromPerm'`, but sharing the middle-permutation pair in a `let`. -/
 def fromPerm'' {m : ℕ} : Perm (BV (m + 1)) → ControlBits m :=
 match m with
 | 0 => fun π _ => LastLayer π
@@ -297,6 +342,9 @@ match m with
   piFinSuccCastSucc.symm ((FirstLayer π, LastLayer π),
   fun k p => fromPerm'' (middlePerms (getBit 0 p)) k (getRes 0 p))
 
+/-- Compute the control bits of `π`: the outer layers are `FirstLayer π` and `LastLayer π`, and the
+inner layers come from recursively taking the control bits of the two halves of `MiddlePerm π`
+(selected by bit `0`). Used throughout; `fromPerm'`/`fromPerm''` are equivalent. -/
 def fromPerm {m : ℕ} : Perm (BV (m + 1)) → ControlBits m :=
 match m with
 | 0 => fun π _ => LastLayer π
@@ -335,6 +383,10 @@ lemma fromPerm_succ_apply_mergeBitRes {π : Perm (BV (m + 2))} {b : Bool} :
     fromPerm ((bitInvarMulEquiv 0).symm (MiddlePerm π) b) := by
   simp_rw [fromPerm_succ_apply_castSucc_succ, getBit_mergeBitRes, getRes_mergeBitRes]
 
+/-- The correctness theorem, and the extension of Bernstein's work: interpreting the control bits of
+`π` recovers `π`, i.e. `toPerm ∘ fromPerm = id`. Equivalently, `fromPerm` is a right inverse of
+`toPerm` (`fromPerm_rightInverse`), so every permutation of `BV (m + 1)` is represented by some
+control bits. -/
 lemma toPerm_leftInverse : (toPerm (m := m)).LeftInverse fromPerm := by
   unfold Function.LeftInverse ; induction m with | zero | succ m IH <;> intro π
   · exact lastLayerPerm_base
@@ -350,18 +402,22 @@ lemma fromPerm_rightInverse : (fromPerm (m := m)).RightInverse toPerm := toPerm_
 
 end ControlBits
 
+/-- The control bits flattened into a single `Bool` array of length `(2m + 1) * 2^m`. -/
 abbrev SerialControlBits (m : ℕ) := Fin ((2*m + 1)*(2^m)) → Bool
 
 namespace SerialControlBits
 
 variable {m : ℕ}
 
+/-- Reshape the flat serial control bits into the `2m + 1` layers of `ControlBits m`. -/
 def equivControlBits {m : ℕ} : SerialControlBits m ≃ ControlBits m :=
 (finProdFinEquiv.arrowCongr (Equiv.refl _)).symm.trans (curry _ _ _)
 
+/-- Interpret serial control bits as a permutation (reshape, then `ControlBits.toPerm`). -/
 def toPerm (cb : SerialControlBits m) : Perm (BV (m + 1)) :=
   (ControlBits.toPerm (m := m)) (equivControlBits cb)
 
+/-- Compute the serial control bits of a permutation (`ControlBits.fromPerm`, then flatten). -/
 def fromPerm (π : Perm (BV (m + 1))) : SerialControlBits m :=
   equivControlBits.symm (ControlBits.fromPerm (m := m) π)
 
@@ -371,6 +427,11 @@ lemma toPerm_leftInverse : (toPerm (m := m)).LeftInverse (fromPerm)  :=
 lemma fromPerm_rightInverse : (fromPerm (m := m)).RightInverse (toPerm) := toPerm_leftInverse
 
 end SerialControlBits
+
+/-! ### Worked examples
+
+Small concrete control bits and permutations (with their expected normalised forms) used to exercise
+`toPerm`/`fromPerm` via `#eval`. -/
 
 def controlBits1 : ControlBits 1 := ![![true, false], ![true, false], ![false, false]]
 def controlBits1_perm : Perm (BV 2) where
